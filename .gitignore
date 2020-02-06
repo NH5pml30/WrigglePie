@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio garbage .vs
+*/.vs
+.vs
+
+# Visual Studio build
+*.pdb
+*.idb
+*.log
+*.tlog
+*.ilk
+*.config
+
