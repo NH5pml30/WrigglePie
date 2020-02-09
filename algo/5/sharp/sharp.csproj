@@ -51,7 +51,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>SimpleTreeTask.EntryPoint</StartupObject>
+    <StartupObject>TreapTask.EntryPoint</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="BalancedTree.cs" />
     <Compile Include="SimpleTree.cs" />
+    <Compile Include="MoveToFront.cs" />
     <Compile Include="Treap.cs" />
   </ItemGroup>
   <ItemGroup>

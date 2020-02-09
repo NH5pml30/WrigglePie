@@ -8,115 +8,71 @@ namespace TreapTask
 {
     internal class TreapNode
     {
-        internal int x;
-        internal int y;
-        internal int deltaX = 0;
-        internal TreapNode parent = null;
+        internal int no, x, y;
         internal TreapNode left = null, right = null;
+        internal TreapNode parent = null;
 
-        internal TreapNode(int x, int y, TreapNode parent)
+        internal TreapNode(int y, int x, int no, TreapNode parent)
         {
+            this.no = no;
             this.x = x;
             this.y = y;
             parent?.Append(this);
         }
 
-        internal TreapNode(Tuple<int, int> pair, TreapNode parent) :
-            this(pair.Item1, pair.Item2, parent)
+        internal TreapNode(Tuple<int, int, int> pair, TreapNode parent) :
+            this(pair.Item1, pair.Item2, pair.Item3, parent)
         {
         }
 
-        internal void ChangeDelta(int delta)
+        internal TreapNode Append(TreapNode child)
         {
-            deltaX += delta;
-        }
+            if (child == null)
+                return null;
 
-        internal TreapNode Append(TreapNode node)
-        {
-            node.parent = this;
+            child.parent = this;
             TreapNode save;
-            if (node.x < x)
+            if (child.x < x)
             {
-                if (left != null)
-                    left.parent = null;
                 save = left;
-                left = node;
+                left = child;
             }
             else
             {
-                if (right != null)
-                    right.parent = null;
                 save = right;
-                right = node;
+                right = child;
             }
             return save;
         }
 
-        internal void Split(int key, out TreapNode T1, out TreapNode T2, int accumDelta = 0)
+        internal TreapNode(List<Tuple<int, int, int>> nodes)
         {
-            TreapNode l = null, r = null;
-            if (key > x + accumDelta + deltaX)
-            {
-                right?.Split(key, out l, out r, accumDelta + deltaX);
-                right = l;
-                T1 = this;
-                T2 = r;
-            }
-            else
-            {
-                left?.Split(key, out l, out r, accumDelta + deltaX);
-                left = r;
-                T1 = l;
-                T2 = this;
-            }
-        }
+            Tuple<int, int, int> root = nodes.Min();
+            nodes.Sort((Tuple<int, int, int> left, Tuple<int, int, int> right) => left.Item2 - right.Item2);
 
-        internal TreapNode Merge(TreapNode other)
-        {
-            if (other == null)
-                return this;
-            if (y > other.y)
-            {
-                right = right.Merge(other);
-                return this;
-            }
-            else
-            {
-                other.left = Merge(other.left);
-                return other;
-            }
-        }
-
-        public TreapNode(List<Tuple<int, int>> nodes)
-        {
-            nodes.Sort(delegate (Tuple<int, int> left, Tuple<int, int> right)
-            {
-                return left.Item1 - right.Item1;
-            });
-
-            x = nodes[0].Item1;
-            y = nodes[0].Item2;
-
-            TreapNode last = this, lastChild = null;
+            (y, x, no) = root;
+            TreapNode last = new TreapNode(nodes[0], null), prelast = null;
             for (int i = 1; i < nodes.Count; i++)
             {
-                while (last != null && nodes[i].Item2 < last.y)
+                while (last != null && nodes[i].Item1 < last.y)
                 {
-                    lastChild = last;
+                    prelast = last;
                     last = last.parent;
                 }
 
-                TreapNode newNode = new TreapNode(nodes[i], last);
-                lastChild?.Append(newNode);
+                TreapNode newNode = nodes[i].Item3 == no ? this : new TreapNode(nodes[i], null);
+                if (last == null)
+                    newNode.Append(prelast);
+                else
+                    newNode.Append(last.Append(newNode));
                 last = newNode;
-                lastChild = null;
             }
         }
 
-        public void RecursiveTraverse(Action<TreapNode> action)
+        public void RecursiveTraverse(Action<int, int?, int?, int?> action)
         {
             left?.RecursiveTraverse(action);
-            action(this);
+            action(no, parent?.no, left?.no, right?.no);
             right?.RecursiveTraverse(action);
         }
     }
@@ -125,31 +81,23 @@ namespace TreapTask
     {
         static void Main(string[] args)
         {
-            string[] inp = Console.ReadLine().Split(' ');
-            int n = Convert.ToInt32(inp[0]), m = Convert.ToInt32(inp[1]);
-            List<Tuple<int, int>> nodes = new List<Tuple<int, int>>(n);
+            int n = Convert.ToInt32(Console.ReadLine());
+            var nodes = new List<Tuple<int, int, int>>(n);
+
             for (int i = 0; i < n; i++)
-                nodes.Add(new Tuple<int, int>(i, i));
-
-            TreapNode treap = new TreapNode(nodes);
-            for (int i = 0; i < m; i++)
             {
-                inp = Console.ReadLine().Split(' ');
-                int l = Convert.ToInt32(inp[0]) - 1, r = Convert.ToInt32(inp[1]) - 1;
-                treap.Split(l, out TreapNode left, out TreapNode middle);
-                middle.Split(r + 1, out middle, out TreapNode right);
-
-                left.ChangeDelta(r - l + 1);
-                right = left.Merge(right);
-                middle.ChangeDelta(-l);
-                treap = middle.Merge(right);
+                string[] inp = Console.ReadLine().Split(' ');
+                nodes.Add(Tuple.Create(Convert.ToInt32(inp[1]), Convert.ToInt32(inp[0]), i));
             }
 
-            treap.RecursiveTraverse((TreapNode node) =>
+            TreapNode treap = new TreapNode(nodes);
+            Console.WriteLine("YES");
+            treap.RecursiveTraverse((int no, int? parentNo, int? leftNo, int? rightNo) =>
             {
-                Console.Write((node.y + 1).ToString() + " ");
+                nodes[no] = Tuple.Create((parentNo ?? -1) + 1, (leftNo ?? -1) + 1, (rightNo ?? -1) + 1);
             });
-            Console.WriteLine();
+            foreach (var node in nodes)
+                Console.WriteLine(node.Item1 + " " + node.Item2 + " " + node.Item3);
         }
     }
 }
