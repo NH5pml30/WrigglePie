@@ -1,42 +1,28 @@
-﻿#define CONTRACTS_FULL
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics.Contracts;
 
 interface IBst<T> where T : IComparable
 {
     void Insert(T x);
     void Delete(T x);
     bool Exists(T x);
-    T Next(T x);
-    T Prev(T x);
+    bool Next(T x, out T key);
+    bool Prev(T x, out T key);
 }
 
 class Tree<T> : IBst<T> where T : IComparable
 {
     private class Node
     {
-        internal Tree<T> enclosing;
         internal Node parent = null;
         internal int siblingIndex = -1;
         internal List<T> keys;
         internal List<Node> children;
 
-        internal Node(Tree<T> enclosing,
-                      List<T> keys,
+        internal Node(List<T> keys,
                       List<Node> children)
         {
-            Contract.Requires(
-                (keys.Count == 2 || keys.Count == 3) &&
-                (children.Count == 0 || children.Count == keys.Count + 1)
-            );
-
-            this.enclosing = enclosing;
             this.keys = keys;
             this.children = children;
 
@@ -48,232 +34,101 @@ class Tree<T> : IBst<T> where T : IComparable
             }
         }
 
-        private T Split(out Node right)
+        internal static void Traverse(Node node, Action<Node> leafAction, Func<Node, Node> nodeAction)
         {
-            right = new Node(enclosing, keys.GetRange(2, 1), children.GetRange(2, 2));
-            T res = keys[1];
-            keys.RemoveRange(1, 2);
-            children.RemoveRange(2, 2);
-            return res;
-        }
-
-        private void Append(int at, T key, Node node)
-        {
-            keys.Insert(at, key);
-            children.Insert(at + 1, node);
-            node.parent = this;
-            node.siblingIndex = at + 1;
-        }
-
-        private T Remove(int keyAt, bool isRightNode, out Node node)
-        {
-            T key = keys[keyAt];
-            keys.RemoveAt(keyAt);
-
-            int childAt = keyAt + (isRightNode ? 1 : 0);
-            children[childAt].parent = null;
-            children[childAt].siblingIndex = -1;
-            node = children[childAt];
-            children.RemoveAt(childAt);
-
-            for (int i = childAt; i < children.Count; i++)
-                children[i].siblingIndex--;
-
-            return key;
-        }
-
-        private void HandleOverflow()
-        {
-            T key = Split(out Node right);
-
-            if (ReferenceEquals(this, enclosing.Root))
-                enclosing.Root = new Node(enclosing, new List<T>() { key }, new List<Node>() { this, right });
-            else
+            while (node != null)
             {
-                parent.Append(siblingIndex + 1, key, right);
-                parent.Update();
+                if (!node.children.Any())
+                {
+                    leafAction(node);
+                    break;
+                }
+
+                node = nodeAction(node);
             }
         }
 
-        private Node MergeWithSibling()
+        internal static Node Neighbor(Node atNode, bool isNext, T x, out T res)
         {
-            int keyIndex = siblingIndex == 0 ? 0 : siblingIndex - 1;
-
-            T key = parent.Remove(keyIndex, siblingIndex != 0, out Node sibling);
-            sibling.Append(0, key, children[0]);
-            children.Clear();
-            keys.Clear();
-
-            return sibling;
-        }
-
-        private void HandleUnderflow()
-        {
-            if (ReferenceEquals(this, enclosing.Root))
+            void getAt(Node self, out int childAt, out int keyAt)
             {
-                Node newRoot = children[0];
-
-                children.Clear();
-                keys.Clear();
-
-                newRoot.parent = null;
-                newRoot.siblingIndex = -1;
-                enclosing.Root = newRoot;
-            }
-            else
-            {
-                Node sibling = MergeWithSibling();
-
-                if (sibling.keys.Count == 3)
-                    sibling.HandleOverflow();
+                childAt = self.keys.BinarySearch(x);
+                if (childAt >= 0)
+                {
+                    if (!isNext)
+                        keyAt = childAt - 1;
+                    else
+                        keyAt = childAt + 1;
+                    childAt += (isNext ? 1 : 0);
+                }
                 else
-                    parent.Update();
-            }
-        }
-
-        internal void Update()
-        {
-            if (keys.Count == 0)
-                HandleUnderflow();
-            else if (keys.Count == 3)
-                HandleOverflow();
-        }
-
-        private void Traverse(Func<Node, T, bool> HandleLeafKey, Func<Node, T, int> HandleNodeKey)
-        {
-            if (!children.Any())
-            {
-                foreach (T key in keys)
-                    if (HandleLeafKey(this, key))
-                        break;
-                return;
-            }
-
-            int index = 0;
-            foreach (T key in keys)
-            {
-                int res = HandleNodeKey(this, key);
-                if (res == -1)
                 {
-                    children[index].Traverse(HandleLeafKey, HandleNodeKey);
-                    return;
+                    childAt = ~childAt;
+                    if (!isNext)
+                        keyAt = childAt - 1;
+                    else
+                        keyAt = childAt;
                 }
-                if (res == 1)
-                {
-                    children[index + 1].Traverse(HandleLeafKey, HandleNodeKey);
-                    return;
-                }
-                if (res != 0)
-                    return;
-                index++;
             }
 
-            children.Last().Traverse(HandleLeafKey, HandleNodeKey);
-        }
-
-        private void Neighbor(bool isNext, T x, out T res, out Node node)
-        {
             T lRes = x;
-            Node lNode = null;
+            Node node = null;
 
-            /// > to leftleft
-            bool func(Node self, T key)
-            {
-                if (isNext ?
-                        key.CompareTo(x) > 0 :
-                        key.CompareTo(x) < 0)
+            Traverse(atNode,
+                (Node self) =>
                 {
-                    if (lRes.Equals(x) || (isNext ?
-                            key.CompareTo(lRes) < 0 :
-                            key.CompareTo(lRes) > 0))
+                    getAt(self, out int childAt, out int keyAt);
+                    if (keyAt >= 0 && keyAt < self.keys.Count &&
+                        (lRes.Equals(x) || ((self.keys[keyAt].CompareTo(lRes) > 0) != isNext)))
                     {
-                        lNode = self;
-                        lRes = key;
+                        node = self;
+                        lRes = self.keys[keyAt];
                     }
-                    return true;
-                }
-                return false;
-            }
+                },
+                (Node self) =>
+                {
+                    getAt(self, out int childAt, out int keyAt);
 
-            Traverse(
-                func,
-                (Node self, T key) => func(self, key) ? -1 : 0
-            );
+                    if (keyAt >= 0 && keyAt < self.keys.Count &&
+                        (lRes.Equals(x) || ((self.keys[keyAt].CompareTo(lRes) > 0) != isNext)))
+                    {
+                        node = self;
+                        lRes = self.keys[keyAt];
+                    }
+                    return self.children[childAt];
+                });
 
             res = lRes;
-            node = lNode;
-        }
-
-        private Node NextNode(T x, out T key)
-        {
-            Neighbor(true, x, out T lKey, out Node node);
-            key = lKey;
             return node;
         }
 
-        private Node PrevNode(T x, out T key)
-        {
-            Neighbor(false, x, out T lKey, out Node node);
-            key = lKey;
-            return node;
-        }
+        internal Node NextNode(T x, out T key) => Neighbor(this, true, x, out key);
 
-        internal T Next(T x)
-        {
-            NextNode(x, out T key);
-            return key;
-        }
+        internal Node PrevNode(T x, out T key) => Neighbor(this, false, x, out key);
 
-        internal T Prev(T x)
+        internal Node Find(T x)
         {
-            PrevNode(x, out T key);
-            return key;
-        }
+            Node node = null;
 
-        private Node Find(T x)
-        {
-            Node lNode = null;
-
-            Traverse(
-                (Node self, T key) =>
+            Traverse(this,
+                (Node self) =>
                 {
-                    int comp = key.CompareTo(x);
-                    if (comp == 0)
-                        lNode = self;
-                    return comp >= 0;
+                    node = self;
                 },
-                (Node self, T key) =>
+                (Node self) =>
                 {
-                    int comp = key.CompareTo(x);
-                    if (comp == 0)
-                        lNode = self;
-                    return comp == 0 ? 2 : (comp > 0 ? -1 : 0);
+                    int at = self.keys.BinarySearch(x);
+                    if (at >= 0)
+                    {
+                        node = self;
+                        return null;
+                    }
+
+                    return self.children[~at];
                 }
             );
 
-            return lNode;
-        }
-
-        private void DeleteHelper(T x, bool found)
-        {
-            if (found)
-            {
-                if (!children.Any())
-                {
-                    keys.Remove(x);
-                    Update();
-                }
-                else
-                {
-                    int at = keys.IndexOf(x);
-                    
-                }
-            }
-        }
-
-        internal void Delete(T x)
-        {
-            ;/// Find(x, (Node node, bool found) => node.DeleteHelper(found, x));
+            return node;
         }
     }
 
@@ -281,30 +136,174 @@ class Tree<T> : IBst<T> where T : IComparable
 
     public Tree()
     {
-        Root = new Node(this, new List<T>(), new List<Node>());
+        Root = new Node(new List<T>(), new List<Node>());
     }
 
-    void IBst<T>.Insert(T x)
+    private T SplitNode(Node self, out Node right)
     {
+        bool isLeaf = !self.children.Any();
+        right = new Node(
+            self.keys.GetRange(2, 1),
+            isLeaf ?
+                new List<Node>() :
+                self.children.GetRange(2, 2)
+            );
+        T res = self.keys[1];
+        self.keys.RemoveRange(1, 2);
+        if (!isLeaf)
+            self.children.RemoveRange(2, 2);
+        return res;
     }
 
-    void IBst<T>.Delete(T x)
+    private void AppendToNode(Node self, int keyAt, T key, bool isRightNode, Node node)
     {
+        self.keys.Insert(keyAt, key);
+        int nodeAt = keyAt + (isRightNode ? 1 : 0);
+        self.children.Insert(nodeAt, node);
+        node.parent = self;
+        node.siblingIndex = nodeAt;
+        for (int index = nodeAt + 1; index < self.children.Count; index++)
+            self.children[index].siblingIndex++;
     }
 
-    bool IBst<T>.Exists(T x)
+    private T RemoveFromNode(Node self, int keyAt, bool isRightNode)
     {
-        throw new NotImplementedException();
+        T key = self.keys[keyAt];
+        self.keys.RemoveAt(keyAt);
+
+        int childAt = keyAt + (isRightNode ? 1 : 0);
+        self.children[childAt].parent = null;
+        self.children[childAt].siblingIndex = -1;
+        self.children.RemoveAt(childAt);
+
+        for (int i = childAt; i < self.children.Count; i++)
+            self.children[i].siblingIndex--;
+
+        return key;
     }
 
-    T IBst<T>.Next(T x)
+    private void HandleOverflow(Node at)
     {
-        throw new NotImplementedException();
+        T key = SplitNode(at, out Node right);
+
+        if (ReferenceEquals(at, Root))
+            Root = new Node(new List<T>() { key }, new List<Node>() { at, right });
+        else
+        {
+            AppendToNode(at.parent, at.siblingIndex, key, true, right);
+            Update(at.parent);
+        }
     }
 
-    T IBst<T>.Prev(T x)
+    private Node MergeWithSibling(Node self)
     {
-        throw new NotImplementedException();
+        Node sibling;
+        if (self.siblingIndex == 0)
+        {
+            sibling = self.parent.children[1];
+            T key = RemoveFromNode(self.parent, 0, false);
+            if (self.children.Any())
+                AppendToNode(sibling, 0, key, false, self.children[0]);
+            else
+                sibling.keys.Insert(0, key);
+        }
+        else
+        {
+            sibling = self.parent.children[self.siblingIndex - 1];
+            T key = RemoveFromNode(self.parent, self.siblingIndex - 1, true);
+            if (self.children.Any())
+                AppendToNode(sibling, sibling.keys.Count, key, true, self.children[0]);
+            else
+                sibling.keys.Insert(sibling.keys.Count, key);
+        }
+        self.children.Clear();
+        self.keys.Clear();
+
+        return sibling;
+    }
+
+    private void HandleUnderflow(Node at)
+    {
+        if (ReferenceEquals(at, Root))
+        {
+            if (at.children.Any())
+            {
+                Node newRoot = at.children[0];
+
+                at.children.Clear();
+                at.keys.Clear();
+
+                newRoot.parent = null;
+                newRoot.siblingIndex = -1;
+                Root = newRoot;
+            }
+        }
+        else
+        {
+            Node sibling = MergeWithSibling(at);
+
+            if (sibling.keys.Count == 3)
+                HandleOverflow(sibling);
+            else
+                Update(sibling.parent);
+        }
+    }
+
+    private void Update(Node at)
+    {
+        if (at.keys.Count == 0)
+            HandleUnderflow(at);
+        else if (at.keys.Count == 3)
+            HandleOverflow(at);
+    }
+
+    public void Insert(T x)
+    {
+        Node place = Root.Find(x);
+        if (!place.keys.Contains(x))
+        {
+            place.keys.Add(x);
+            place.keys.Sort();
+            Update(place);
+        }
+    }
+
+    public void Delete(T x)
+    {
+        Node place = Root.Find(x);
+        if (!place.keys.Contains(x))
+            return;
+
+        if (!place.children.Any())
+        {
+            place.keys.Remove(x);
+            Update(place);
+        }
+        else
+        {
+            Node next = place.NextNode(x, out T key);
+            next.keys.Remove(key);
+            Update(next);
+
+            place = Root.Find(x);
+            place.keys[place.keys.IndexOf(x)] = key;
+        }
+    }
+
+    public bool Exists(T x)
+    {
+        Node node = Root.Find(x);
+        return node.keys.Contains(x);
+    }
+
+    public bool Next(T x, out T key)
+    {
+        return Root.NextNode(x, out key) != null;
+    }
+
+    public bool Prev(T x, out T key)
+    {
+        return Root.PrevNode(x, out key) != null;
     }
 }
 
@@ -315,6 +314,32 @@ namespace sharp
     {
         static void Main(string[] args)
         {
+            Tree<int> tree = new Tree<int>();
+
+            string s;
+            while ((s = Console.ReadLine()) != null)
+            {
+                string[] command = s.Split(' ');
+                int arg = Convert.ToInt32(command[1]), key;
+                switch (command[0])
+                {
+                    case "insert":
+                        tree.Insert(arg);
+                        break;
+                    case "delete":
+                        tree.Delete(arg);
+                        break;
+                    case "exists":
+                        Console.WriteLine(tree.Exists(arg).ToString().ToLower());
+                        break;
+                    case "next":
+                        Console.WriteLine(tree.Next(arg, out key) ? key.ToString() : "none");
+                        break;
+                    case "prev":
+                        Console.WriteLine(tree.Prev(arg, out key) ? key.ToString() : "none");
+                        break;
+                }
+            }
         }
     }
 }
