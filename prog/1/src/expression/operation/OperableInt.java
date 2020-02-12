@@ -52,14 +52,17 @@ public class OperableInt {
         if (exp < 0 || base == 0 && exp == 0) {
             throw new PowException(base, exp);
         }
+        int x = base, n = exp;
         try {
             int r = 1;
-            while (exp != 0) {
-                if (exp % 2 == 1) {
-                    r = multiply(r, base);
+            while (n != 0) {
+                if (n % 2 == 1) {
+                    r = multiply(r, x);
                 }
-                exp /= 2;
-                base = multiply(base, base);
+                n /= 2;
+                if (n != 0) {
+                    x = multiply(x, x);
+                }
             }
             return r;
         } catch ( BinaryOverflowException e ) {
@@ -82,7 +85,7 @@ public class OperableInt {
                 } else if (val < x) {
                     L = M;
                 } else {
-                    return val;
+                    return M;
                 }
             } catch ( BinaryOverflowException e ) {
                 R = M;

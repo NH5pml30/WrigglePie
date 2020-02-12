@@ -142,17 +142,34 @@ public class StringSource extends ExpressionSource {
                     }
                     break;
                 case '*':
-                    cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
+                    if (pos + 1 < data.length() && data.charAt(pos + 1) == '*') {
+                        cacheBinaryOp(BinaryOperationTableEntry.POW);
+                    } else {
+                        cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
+                    }
                     break;
                 case '/':
-                    cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
+                    if (pos + 1 < data.length() && data.charAt(pos + 1) == '/') {
+                        cacheBinaryOp(BinaryOperationTableEntry.LOG);
+                    } else {
+                        cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
+                    }
                     break;
                 default:
                     String name = read(this::isStartName, this::isPartName, x -> true);
                     if (name.isEmpty()) {
                         throw error("unsupported token part: '" + data.charAt(pos) + "'");
                     }
-                    cacheName(name);
+                    switch (name) {
+                        case "log2":
+                            cacheUnaryOp(UnaryOperationTableEntry.LOG2);
+                            break;
+                        case "pow2":
+                            cacheUnaryOp(UnaryOperationTableEntry.POW2);
+                            break;
+                        default:
+                            cacheName(name);
+                    }
             }
         }
     }
@@ -199,6 +216,11 @@ public class StringSource extends ExpressionSource {
 
     @Override
     public ParserException error( final String message ) {
-        return new ParserException(pos + ": " + message);
+        return new ParserException(
+            pos + " (.. " +
+            data.substring(Integer.max(pos - 5, 0), pos) + "|" +
+            data.substring(pos, Integer.min(pos + 5, data.length())) +
+            " ..): " + message
+        );
     }
 }

@@ -4,7 +4,9 @@ public enum BinaryOperationTableEntry implements OperationTableBase {
     ADD(2, "+", true),
     SUBTRACT(2, "-", false),
     MULTIPLY(1, "*", true),
-    DIVIDE(1, "/", false);
+    DIVIDE(1, "/", false),
+    POW(0, "**", false),
+    LOG(0, "//", false);
 
     final int priority;
     final String symbol;
