@@ -1,8 +1,9 @@
-package expression;
+package expression.operation;
+
+import expression.CommonExpression;
+import expression.exception.EvaluationException;
 
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public abstract class OperationBase implements Comparable<OperationBase>, CommonExpression {
     final private OperationTableBase entry;
@@ -18,6 +19,11 @@ public abstract class OperationBase implements Comparable<OperationBase>, Common
         try {
             return evaluateUnsafe(x);
         } catch ( EvaluationException e ) {
+            if (e.getFilled()) {
+                throw e;
+            }
+
+            e.setOp(entry.toString());
             StringBuilder sb = new StringBuilder(" = ").append(toString()).append(" (with ");
             boolean isFirst = true;
             for (Map.Entry<String, Integer> entry : x.entrySet()) {
@@ -30,6 +36,7 @@ public abstract class OperationBase implements Comparable<OperationBase>, Common
             }
             sb.append(")");
             e.addExpr(sb.toString());
+            e.setFilled();
             throw e;
         }
     }

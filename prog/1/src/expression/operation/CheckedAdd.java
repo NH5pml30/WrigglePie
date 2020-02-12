@@ -1,9 +1,11 @@
-package expression;
+package expression.operation;
+
+import expression.CommonExpression;
 
 public class CheckedAdd extends BinaryOperation {
     static public final BinaryOperationTableEntry entry = BinaryOperationTableEntry.ADD;
 
-    public CheckedAdd(CommonExpression left, CommonExpression right ) {
+    public CheckedAdd( CommonExpression left, CommonExpression right ) {
         super(OperableInt::add, entry, left, right);
     }
 }

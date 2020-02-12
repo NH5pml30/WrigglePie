@@ -1,9 +1,8 @@
 package expression.parser;
 
-import expression.BinaryOperationTableEntry;
-import expression.UnaryOperationTableEntry;
+import expression.operation.BinaryOperationTableEntry;
+import expression.operation.UnaryOperationTableEntry;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**

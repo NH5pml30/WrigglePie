@@ -1,5 +1,10 @@
 package expression;
 
+import expression.operation.CheckedAdd;
+import expression.operation.CheckedDivide;
+import expression.operation.CheckedMultiply;
+import expression.operation.CheckedSubtract;
+
 import java.util.ArrayList;
 import java.util.List;
 

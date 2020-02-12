@@ -1,4 +1,4 @@
-package expression;
+package expression.operation;
 
 public enum BinaryOperationTableEntry implements OperationTableBase {
     ADD(2, "+", true),

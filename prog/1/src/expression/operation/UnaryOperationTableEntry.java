@@ -1,7 +1,9 @@
-package expression;
+package expression.operation;
 
 public enum UnaryOperationTableEntry implements OperationTableBase {
-    UNARY_MINUS(0, "-");
+    UNARY_MINUS(0, "-"),
+    LOG2(0, "log2"),
+    POW2(0, "pow2");
 
     final int priority;
     final String symbol;

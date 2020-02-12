@@ -1,5 +1,10 @@
 package expression;
 
+import expression.operation.CheckedAdd;
+import expression.operation.CheckedDivide;
+import expression.operation.CheckedMultiply;
+import expression.operation.CheckedSubtract;
+
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
@@ -20,10 +25,10 @@ public class TripleExpressionTest extends ExpressionTest {
         testExpression("x", "x", new Variable("x"), (x, y, z) -> x);
         testExpression("y", "y", new Variable("y"), (x, y, z) -> y);
         testExpression("z", "z", new Variable("z"), (x, y, z) -> z);
-        testExpression("(x + 2)", "x + 2", new CheckedAdd(new Variable("x"), new Const(2)), (x, y, z) -> x + 2);
-        testExpression("(2 - y)", "2 - y", new CheckedSubtract(new Const(2), new Variable("y")), (x, y, z) -> 2 - y);
-        testExpression("(3 * z)", "3 * z", new CheckedMultiply(new Const(3), new Variable("z")), (x, y, z) -> 3 * z);
-        testExpression("(x / -2)", "x / -2", new CheckedDivide(new Variable("x"), new Const(-2)), (x, y, z) -> -x / 2);
+        testExpression("(x + 2)", "x + 2", new CheckedAdd(new Variable("x"), new Const(2)), ( x, y, z) -> x + 2);
+        testExpression("(2 - y)", "2 - y", new CheckedSubtract(new Const(2), new Variable("y")), ( x, y, z) -> 2 - y);
+        testExpression("(3 * z)", "3 * z", new CheckedMultiply(new Const(3), new Variable("z")), ( x, y, z) -> 3 * z);
+        testExpression("(x / -2)", "x / -2", new CheckedDivide(new Variable("x"), new Const(-2)), ( x, y, z) -> -x / 2);
         testExpression("((1 + 2) + 3)", "1 + 2 + 3", new CheckedAdd(new CheckedAdd(new Const(1), new Const(2)), new Const(3)), (x, y, z) -> 6);
         testExpression("(1 + (2 + 3))", "1 + 2 + 3", new CheckedAdd(new Const(1), new CheckedAdd(new Const(2), new Const(3))), (x, y, z) -> 6);
         testExpression("((1 - 2) - 3)", "1 - 2 - 3", new CheckedSubtract(new CheckedSubtract(new Const(1), new Const(2)), new Const(3)), (x, y, z) -> -4);

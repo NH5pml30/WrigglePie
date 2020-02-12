@@ -1,9 +1,9 @@
-package expression;
+package expression.operation;
+
+import expression.CommonExpression;
 
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
-import java.util.function.Function;
 
 public abstract class BinaryOperation extends OperationBase implements CommonExpression {
     private final BinaryOperator<Integer> operator;

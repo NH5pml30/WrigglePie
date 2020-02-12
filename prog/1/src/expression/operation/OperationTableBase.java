@@ -1,4 +1,4 @@
-package expression;
+package expression.operation;
 
 public interface OperationTableBase {
     int getPriority();

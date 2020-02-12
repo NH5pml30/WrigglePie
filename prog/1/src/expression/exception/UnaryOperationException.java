@@ -1,13 +1,18 @@
-package expression;
+package expression.exception;
 
 public class UnaryOperationException extends EvaluationException {
     private Number val;
     private String op;
 
-    public UnaryOperationException( Number val, String op, String message ) {
-        super(op + val, message);
+    public UnaryOperationException( Number val, String message ) {
+        super(message);
         this.val = val;
+    }
+
+    @Override
+    public void setOp( String op ) {
         this.op = op;
+        super.addExpr(op + '(' + val + ')');
     }
 
     public Number getVal() {

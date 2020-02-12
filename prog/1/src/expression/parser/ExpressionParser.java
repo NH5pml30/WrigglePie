@@ -1,6 +1,7 @@
 package expression.parser;
 
 import expression.*;
+import expression.operation.*;
 import expression.parser.ExpressionSource.TokenType;
 
 import java.util.Map;
@@ -63,6 +64,10 @@ public class ExpressionParser implements Parser {
         unFactories = Map.of(
             CheckedUnaryMinus.entry, new UnExprFactory(CheckedUnaryMinus::new, CheckedUnaryMinus.entry)
         );
+    private final static Map<String, UnaryOperationTableEntry>
+        unaryFunctionsMap = Map.of(
+            "log2", CheckedLog2.entry
+        );
 
     public ExpressionParser() {
     }
@@ -104,14 +109,19 @@ public class ExpressionParser implements Parser {
                 left = parseSubexpression(Integer.MAX_VALUE, outVarNames);
                 expect(TokenType.RIGHT_PAR);
             } else if (testNoShift(TokenType.NAME)) {
-                if (constraintVarNames != null && !constraintVarNames.contains(tokenData.name)) {
+                if (unaryFunctionsMap.containsKey(tokenData.name)) {
+                    UnaryOperationTableEntry entry = unaryFunctionsMap.get(tokenData.name);
+                    nextToken();
+                    left = unFactories.get(entry).create(parseSubexpression(entry.getPriority(), outVarNames));
+                } else if (constraintVarNames != null && !constraintVarNames.contains(tokenData.name)) {
                     throw error("variable name " + tokenData.name + " not supported!");
+                } else {
+                    if (outVarNames != null) {
+                        outVarNames.add(tokenData.name);
+                    }
+                    nextToken();
+                    left = new Variable(lastData.name);
                 }
-                if (outVarNames != null) {
-                    outVarNames.add(tokenData.name);
-                }
-                nextToken();
-                left = new Variable(lastData.name);
             } else if (test(TokenType.UNARY_OP)) {
                 left = unFactories.get(lastData.unOp).create(parseSubexpression(lastData.unOp.getPriority(), outVarNames));
             } else {

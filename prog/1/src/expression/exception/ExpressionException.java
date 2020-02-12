@@ -1,4 +1,4 @@
-package expression;
+package expression.exception;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)

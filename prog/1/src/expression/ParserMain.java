@@ -1,10 +1,8 @@
 package expression;
 
+import expression.exception.EvaluationException;
 import expression.parser.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
@@ -36,7 +34,7 @@ public class ParserMain {
         } catch ( ParserException e ) {
             System.out.println(e.getMessage());
         } catch ( EvaluationException e ) {
-            System.out.println(e.getExpr());
+            System.out.println(e.getMessage() + ": " + e.getExpr());
         }
 
         scanner.close();

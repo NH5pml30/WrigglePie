@@ -1,7 +1,7 @@
 package expression.parser;
 
-import expression.BinaryOperationTableEntry;
-import expression.UnaryOperationTableEntry;
+import expression.operation.BinaryOperationTableEntry;
+import expression.operation.UnaryOperationTableEntry;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)

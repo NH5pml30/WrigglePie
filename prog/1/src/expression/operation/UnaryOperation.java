@@ -1,8 +1,8 @@
-package expression;
+package expression.operation;
+
+import expression.CommonExpression;
 
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public abstract class UnaryOperation extends OperationBase implements CommonExpression {
