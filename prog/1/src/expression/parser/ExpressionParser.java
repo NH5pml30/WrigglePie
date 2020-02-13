@@ -73,27 +73,24 @@ public class ExpressionParser implements Parser {
     }
 
     public CommonExpression parse( final String source, Set<String> inVarNames, Set<String> outVarNames ) {
-        return parse(new StringSource(source), inVarNames, outVarNames);
+        return parse(new StringSource(source, inVarNames), outVarNames);
     }
 
     public CommonExpression parse( final String source, Set<String> outVarNames ) {
-        return parse(new StringSource(source), Set.of("x", "y", "z"), outVarNames);
+        return parse(new StringSource(source, Set.of("x", "y", "z")), outVarNames);
     }
 
     public CommonExpression parse( final String source ) {
-        return parse(new StringSource(source), Set.of("x", "y", "z"), null);
+        return parse(new StringSource(source, Set.of("x", "y", "z")), null);
     }
 
-    private CommonExpression parse( ExpressionSource source, Set<String> inVarNames, Set<String> outVarNames ) {
-        return new InnerExprParser(source, inVarNames).parse(outVarNames);
+    private CommonExpression parse( ExpressionSource source, Set<String> outVarNames ) {
+        return new InnerExprParser(source).parse(outVarNames);
     }
 
     private static class InnerExprParser extends BaseParser {
-        private Set<String> constraintVarNames;
-
-        InnerExprParser( final ExpressionSource source, Set<String> constraintVarNames ) {
+        InnerExprParser( final ExpressionSource source ) {
             super(source);
-            this.constraintVarNames = constraintVarNames;
             nextToken();
         }
 
@@ -109,9 +106,6 @@ public class ExpressionParser implements Parser {
                 left = parseSubexpression(Integer.MAX_VALUE, outVarNames);
                 expect(TokenType.RIGHT_PAR);
             } else if (testNoShift(TokenType.NAME)) {
-                if (constraintVarNames != null && !constraintVarNames.contains(tokenData.name)) {
-                    throw error("variable name " + tokenData.name + " not supported!");
-                }
                 if (outVarNames != null) {
                     outVarNames.add(tokenData.name);
                 }
@@ -121,7 +115,7 @@ public class ExpressionParser implements Parser {
                 left = unFactories.get(lastData.unOp).create(parseSubexpression(lastData.unOp.getPriority(), outVarNames));
             } else {
                 expect(TokenType.NUMBER);
-                left = new Const(lastData.val);
+                left = lastData.val;
             }
 
             while (true) {

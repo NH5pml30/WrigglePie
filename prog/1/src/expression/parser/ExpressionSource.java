@@ -1,5 +1,6 @@
 package expression.parser;
 
+import expression.Const;
 import expression.operation.BinaryOperationTableEntry;
 import expression.operation.UnaryOperationTableEntry;
 
@@ -25,12 +26,12 @@ public abstract class ExpressionSource {
     }
 
     static final class TokenData {
-        final Integer val;
+        final Const val;
         final String name;
         final BinaryOperationTableEntry biOp;
         final UnaryOperationTableEntry unOp;
 
-        TokenData( int val ) {
+        TokenData( Const val ) {
             this.val = val;
             this.name = null;
             this.biOp = null;
