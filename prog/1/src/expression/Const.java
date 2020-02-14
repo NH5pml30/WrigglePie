@@ -10,6 +10,10 @@ public class Const implements CommonExpression {
         this.value = value;
     }
 
+    public Const( final String strVal ) {
+        this.value = Integer.parseInt(strVal);
+    }
+
     @Override
     public int evaluate( Map<String, Integer> x ) {
         return value;

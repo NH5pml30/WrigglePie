@@ -26,7 +26,7 @@ public abstract class UnaryOperation extends OperationBase implements CommonExpr
 
     @Override
     public String toString() {
-        return entry.toString() + " (" + expr.toString() + ")";
+        return entry.toString() + "(" + expr.toString() + ")";
     }
 
     @Override

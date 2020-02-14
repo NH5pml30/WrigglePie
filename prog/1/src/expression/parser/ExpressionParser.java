@@ -58,42 +58,39 @@ public class ExpressionParser implements Parser {
             CheckedAdd.entry, new BiExprFactory(CheckedAdd::new, CheckedAdd.entry),
             CheckedSubtract.entry, new BiExprFactory(CheckedSubtract::new, CheckedSubtract.entry),
             CheckedDivide.entry, new BiExprFactory(CheckedDivide::new, CheckedDivide.entry),
-            CheckedMultiply.entry, new BiExprFactory(CheckedMultiply::new, CheckedMultiply.entry)
+            CheckedMultiply.entry, new BiExprFactory(CheckedMultiply::new, CheckedMultiply.entry),
+            CheckedPow.entry, new BiExprFactory(CheckedPow::new, CheckedPow.entry),
+            CheckedLog.entry, new BiExprFactory(CheckedLog::new, CheckedLog.entry)
         );
     private final static Map<UnaryOperationTableEntry, UnExprFactory>
         unFactories = Map.of(
-            CheckedUnaryMinus.entry, new UnExprFactory(CheckedUnaryMinus::new, CheckedUnaryMinus.entry)
-        );
-    private final static Map<String, UnaryOperationTableEntry>
-        unaryFunctionsMap = Map.of(
-            "log2", CheckedLog2.entry
+            CheckedNegate.entry, new UnExprFactory(CheckedNegate::new, CheckedNegate.entry),
+            CheckedLog2.entry, new UnExprFactory(CheckedLog2::new, CheckedLog2.entry),
+            CheckedPow2.entry, new UnExprFactory(CheckedPow2::new, CheckedPow2.entry)
         );
 
     public ExpressionParser() {
     }
 
     public CommonExpression parse( final String source, Set<String> inVarNames, Set<String> outVarNames ) {
-        return parse(new StringSource(source), inVarNames, outVarNames);
+        return parse(new StringSource(source, inVarNames), outVarNames);
     }
 
     public CommonExpression parse( final String source, Set<String> outVarNames ) {
-        return parse(new StringSource(source), null, outVarNames);
+        return parse(new StringSource(source, Set.of("x", "y", "z")), outVarNames);
     }
 
     public CommonExpression parse( final String source ) {
-        return parse(new StringSource(source), null, null);
+        return parse(new StringSource(source, Set.of("x", "y", "z")), null);
     }
 
-    private CommonExpression parse( ExpressionSource source, Set<String> inVarNames, Set<String> outVarNames ) {
-        return new InnerExprParser(source, inVarNames).parse(outVarNames);
+    private CommonExpression parse( ExpressionSource source, Set<String> outVarNames ) {
+        return new InnerExprParser(source).parse(outVarNames);
     }
 
     private static class InnerExprParser extends BaseParser {
-        private Set<String> constraintVarNames;
-
-        InnerExprParser( final ExpressionSource source, Set<String> constraintVarNames ) {
+        InnerExprParser( final ExpressionSource source ) {
             super(source);
-            this.constraintVarNames = constraintVarNames;
             nextToken();
         }
 
@@ -109,24 +106,16 @@ public class ExpressionParser implements Parser {
                 left = parseSubexpression(Integer.MAX_VALUE, outVarNames);
                 expect(TokenType.RIGHT_PAR);
             } else if (testNoShift(TokenType.NAME)) {
-                if (unaryFunctionsMap.containsKey(tokenData.name)) {
-                    UnaryOperationTableEntry entry = unaryFunctionsMap.get(tokenData.name);
-                    nextToken();
-                    left = unFactories.get(entry).create(parseSubexpression(entry.getPriority(), outVarNames));
-                } else if (constraintVarNames != null && !constraintVarNames.contains(tokenData.name)) {
-                    throw error("variable name " + tokenData.name + " not supported!");
-                } else {
-                    if (outVarNames != null) {
-                        outVarNames.add(tokenData.name);
-                    }
-                    nextToken();
-                    left = new Variable(lastData.name);
+                if (outVarNames != null) {
+                    outVarNames.add(tokenData.name);
                 }
+                nextToken();
+                left = new Variable(lastData.name);
             } else if (test(TokenType.UNARY_OP)) {
                 left = unFactories.get(lastData.unOp).create(parseSubexpression(lastData.unOp.getPriority(), outVarNames));
             } else {
                 expect(TokenType.NUMBER);
-                left = new Const(lastData.val);
+                left = lastData.val;
             }
 
             while (true) {

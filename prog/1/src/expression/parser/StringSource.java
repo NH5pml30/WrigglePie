@@ -1,8 +1,10 @@
 package expression.parser;
 
+import expression.Const;
 import expression.operation.BinaryOperationTableEntry;
 import expression.operation.UnaryOperationTableEntry;
 
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -14,6 +16,7 @@ public class StringSource extends ExpressionSource {
     private int pos;
     private TokenType cachedTokenType;
     private TokenData cachedData = null;
+    private Set<String> varNames = null;
 
     private enum State {
         PRE, POST, END
@@ -23,6 +26,11 @@ public class StringSource extends ExpressionSource {
 
     public StringSource( final String data ) {
         this.data = data;
+    }
+
+    public StringSource( final String data, final Set<String> varNames ) {
+        this(data);
+        this.varNames = varNames;
     }
 
     private void skipWhitespaces() {
@@ -89,9 +97,9 @@ public class StringSource extends ExpressionSource {
         testState(State.PRE, "number");
         state = State.POST;
         try {
-            cachedData = new TokenData(Integer.parseInt(strVal));
+            cachedData = new TokenData(new Const(strVal));
         } catch ( NumberFormatException e ) {
-            throw error("number too long for 32-bit: " + strVal);
+            throw error("number too long: " + strVal);
         }
         cachedTokenType = TokenType.NUMBER;
         pos += strVal.length();
@@ -142,17 +150,37 @@ public class StringSource extends ExpressionSource {
                     }
                     break;
                 case '*':
-                    cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
+                    if (pos + 1 < data.length() && data.charAt(pos + 1) == '*') {
+                        cacheBinaryOp(BinaryOperationTableEntry.POW);
+                    } else {
+                        cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
+                    }
                     break;
                 case '/':
-                    cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
+                    if (pos + 1 < data.length() && data.charAt(pos + 1) == '/') {
+                        cacheBinaryOp(BinaryOperationTableEntry.LOG);
+                    } else {
+                        cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
+                    }
                     break;
                 default:
                     String name = read(this::isStartName, this::isPartName, x -> true);
                     if (name.isEmpty()) {
                         throw error("unsupported token part: '" + data.charAt(pos) + "'");
                     }
-                    cacheName(name);
+                    switch (name) {
+                        case "log2":
+                            cacheUnaryOp(UnaryOperationTableEntry.LOG2);
+                            break;
+                        case "pow2":
+                            cacheUnaryOp(UnaryOperationTableEntry.POW2);
+                            break;
+                        default:
+                            if (varNames != null && !varNames.contains(name)) {
+                                throw error("variable/function name '" + name + "' not supported!");
+                            }
+                            cacheName(name);
+                    }
             }
         }
     }
@@ -197,8 +225,18 @@ public class StringSource extends ExpressionSource {
         }
     }
 
+    private String getContext( int radius ) {
+        return
+            (pos - radius > 0 ? ".." : "") +
+            data.substring(Integer.max(pos - radius, 0), pos) + "|" +
+            data.substring(pos, Integer.min(pos + radius, data.length())) +
+            (pos + radius < data.length() - 1 ? ".." : "");
+    }
+
     @Override
     public ParserException error( final String message ) {
-        return new ParserException(pos + ": " + message);
+        return new ParserException(
+            pos + " (" + getContext(5) + "): " + message
+        );
     }
 }

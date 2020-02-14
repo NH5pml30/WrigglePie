@@ -15,7 +15,9 @@ public class ParserMain {
             scan.nextLine();
             System.out.print(message);
         }
-        return scan.nextInt();
+        int res = scan.nextInt();
+        scan.nextLine();
+        return res;
     }
 
     public static void main( String[] args ) {

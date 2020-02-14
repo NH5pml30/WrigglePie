@@ -52,14 +52,17 @@ public class OperableInt {
         if (exp < 0 || base == 0 && exp == 0) {
             throw new PowException(base, exp);
         }
+        int x = base, n = exp;
         try {
             int r = 1;
-            while (exp != 0) {
-                if (exp % 2 == 1) {
-                    r = multiply(r, base);
+            while (n != 0) {
+                if (n % 2 == 1) {
+                    r = multiply(r, x);
                 }
-                exp /= 2;
-                base = multiply(base, base);
+                n /= 2;
+                if (n != 0) {
+                    x = multiply(x, x);
+                }
             }
             return r;
         } catch ( BinaryOverflowException e ) {
@@ -72,23 +75,12 @@ public class OperableInt {
             throw new LogException(x, base);
         }
 
-        int L = 0, R = x;
-        while (L < R - 1) {
-            int M = L / 2 + R / 2 + (L % 2 + R % 2) / 2;
-            try {
-                int val = pow(base, M);
-                if (val > x) {
-                    R = M;
-                } else if (val < x) {
-                    L = M;
-                } else {
-                    return val;
-                }
-            } catch ( BinaryOverflowException e ) {
-                R = M;
-            }
+        int res = 0;
+        while (x >= base) {
+            x /= base;
+            res++;
         }
-        return L;
+        return res;
     }
 
     public static int log2( int x ) {
