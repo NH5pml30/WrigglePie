@@ -75,23 +75,12 @@ public class OperableInt {
             throw new LogException(x, base);
         }
 
-        int L = 0, R = x;
-        while (L < R - 1) {
-            int M = L / 2 + R / 2 + (L % 2 + R % 2) / 2;
-            try {
-                int val = pow(base, M);
-                if (val > x) {
-                    R = M;
-                } else if (val < x) {
-                    L = M;
-                } else {
-                    return M;
-                }
-            } catch ( BinaryOverflowException e ) {
-                R = M;
-            }
+        int res = 0;
+        while (x >= base) {
+            x /= base;
+            res++;
         }
-        return L;
+        return res;
     }
 
     public static int log2( int x ) {
