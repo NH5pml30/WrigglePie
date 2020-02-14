@@ -20,8 +20,8 @@ namespace TreapTask
             parent?.Append(this);
         }
 
-        internal TreapNode(Tuple<int, int, int> pair, TreapNode parent) :
-            this(pair.Item1, pair.Item2, pair.Item3, parent)
+        internal TreapNode((int y, int x, int no) data, TreapNode parent) :
+            this(data.y, data.x, data.no, parent)
         {
         }
 
@@ -45,28 +45,46 @@ namespace TreapTask
             return save;
         }
 
-        internal TreapNode(List<Tuple<int, int, int>> nodes)
+        internal TreapNode(List<(int y, int x, int no)> nodes, out TreapNode[] info)
         {
-            Tuple<int, int, int> root = nodes.Min();
-            nodes.Sort((Tuple<int, int, int> left, Tuple<int, int, int> right) => left.Item2 - right.Item2);
+            var root = nodes.Min();
+            nodes.Sort(((int y, int x, int no) left, (int y, int x, int no) right) => left.x - right.x);
 
             (y, x, no) = root;
-            TreapNode last = new TreapNode(nodes[0], null), prelast = null;
-            for (int i = 1; i < nodes.Count; i++)
-            {
-                while (last != null && nodes[i].Item1 < last.y)
-                {
-                    prelast = last;
-                    last = last.parent;
-                }
 
-                TreapNode newNode = nodes[i].Item3 == no ? this : new TreapNode(nodes[i], null);
-                if (last == null)
-                    newNode.Append(prelast);
-                else
-                    newNode.Append(last.Append(newNode));
-                last = newNode;
+            TreapNode[] lInfo = new TreapNode[nodes.Count];
+            lInfo[no] = this;
+
+            TreapNode getNode(int i)
+            {
+                if (lInfo[nodes[i].no] == null)
+                    return lInfo[nodes[i].no] = new TreapNode(nodes[i], null);
+                return lInfo[nodes[i].no];
             }
+
+            if (nodes.Count > 1)
+            {
+                TreapNode
+                    last = getNode(0),
+                    prelast = null;
+                for (int i = 1; i < nodes.Count; i++)
+                {
+                    while (last != null && nodes[i].y < last.y)
+                    {
+                        prelast = last;
+                        last = last.parent;
+                    }
+
+                    TreapNode newNode = getNode(i);
+                    if (last == null)
+                        newNode.Append(prelast);
+                    else
+                        newNode.Append(last.Append(newNode));
+                    last = newNode;
+                }
+            }
+
+            info = lInfo;
         }
 
         public void RecursiveTraverse(Action<int, int?, int?, int?> action)
@@ -82,22 +100,22 @@ namespace TreapTask
         static void Main(string[] args)
         {
             int n = Convert.ToInt32(Console.ReadLine());
-            var nodes = new List<Tuple<int, int, int>>(n);
+            var nodes = new List<(int, int, int)>(n);
 
             for (int i = 0; i < n; i++)
             {
                 string[] inp = Console.ReadLine().Split(' ');
-                nodes.Add(Tuple.Create(Convert.ToInt32(inp[1]), Convert.ToInt32(inp[0]), i));
+                nodes.Add((Convert.ToInt32(inp[1]), Convert.ToInt32(inp[0]), i));
             }
 
-            TreapNode treap = new TreapNode(nodes);
+            new TreapNode(nodes, out TreapNode[] info);
             Console.WriteLine("YES");
-            treap.RecursiveTraverse((int no, int? parentNo, int? leftNo, int? rightNo) =>
-            {
-                nodes[no] = Tuple.Create((parentNo ?? -1) + 1, (leftNo ?? -1) + 1, (rightNo ?? -1) + 1);
-            });
-            foreach (var node in nodes)
-                Console.WriteLine(node.Item1 + " " + node.Item2 + " " + node.Item3);
+            foreach (TreapNode node in info)
+                Console.WriteLine(
+                        ((node.parent?.no ?? -1) + 1) + " " +
+                        ((node.left?.no ?? -1) + 1) + " " +
+                        ((node.right?.no ?? -1) + 1)
+                    );
         }
     }
 }
