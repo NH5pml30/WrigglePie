@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BalancedTree.cs" />
+    <Compile Include="Kmax.cs" />
     <Compile Include="SimpleTree.cs" />
     <Compile Include="MoveToFront.cs" />
     <Compile Include="Treap.cs" />
