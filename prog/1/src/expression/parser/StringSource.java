@@ -1,6 +1,7 @@
 package expression.parser;
 
 import expression.Const;
+import expression.exception.ReadNumberException;
 import expression.operation.BinaryOperationTableEntry;
 import expression.operation.UnaryOperationTableEntry;
 
@@ -93,17 +94,16 @@ public class StringSource extends ExpressionSource {
         pos += op.getSymbol().length();
     }
 
-    private boolean cacheNumber( String strVal ) {
+    private void cacheNumber( String strVal ) {
         testState(State.PRE, "number");
         state = State.POST;
         try {
             cachedData = new TokenData(new Const(strVal));
-        } catch ( NumberFormatException e ) {
-            throw error("number too long: " + strVal);
+        } catch ( ReadNumberException e ) {
+            throw error(e.getMessage() + ": " + strVal);
         }
         cachedTokenType = TokenType.NUMBER;
         pos += strVal.length();
-        return true;
     }
 
     private void cacheNext() {

@@ -11,6 +11,7 @@ import java.util.TreeSet;
 public class DefaultMain {
     public static void main( String[] args ) {
         String expression = "1000000*x*x*x*x*x/(x-1)";
+        System.out.println("x\tf");
         for (int x = 0; x <= 10; x++) {
             System.out.print(x);
             System.out.print("\t");

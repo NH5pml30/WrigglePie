@@ -20,8 +20,7 @@ public abstract class UnaryOperation extends OperationBase implements CommonExpr
 
     @Override
     public int evaluateUnsafe( Map<String, Integer> x ) {
-        int res = expr.evaluate(x);
-        return operator.apply(res);
+        return operator.apply(expr.evaluate(x));
     }
 
     @Override

@@ -14,59 +14,28 @@ import java.util.function.Function;
  * @author Nikolai Kholiavin
  */
 public class ExpressionParser implements Parser {
-    private static abstract class ExprFactory implements Comparable<ExprFactory> {
-        final OperationTableBase entry;
-
-        ExprFactory( OperationTableBase entry ) {
-            this.entry = entry;
-        }
-
-        @Override
-        public int compareTo( ExprFactory other ) {
-            return entry.comparePrior(other.entry);
-        }
+    private interface BiExprFactory {
+        CommonExpression create( CommonExpression left, CommonExpression right );
     }
 
-    private static class BiExprFactory extends ExprFactory {
-        private final BiFunction<CommonExpression, CommonExpression, CommonExpression> factory;
-
-        BiExprFactory( BiFunction<CommonExpression, CommonExpression, CommonExpression> factory, BinaryOperationTableEntry entry ) {
-            super(entry);
-            this.factory = factory;
-        }
-
-        CommonExpression create( CommonExpression left, CommonExpression right ) {
-            return factory.apply(left, right);
-        }
-    }
-
-    private static class UnExprFactory extends ExprFactory {
-        private final Function<CommonExpression, CommonExpression> factory;
-
-        UnExprFactory( Function<CommonExpression, CommonExpression> factory, UnaryOperationTableEntry entry ) {
-            super(entry);
-            this.factory = factory;
-        }
-
-        CommonExpression create( CommonExpression expr ) {
-            return factory.apply(expr);
-        }
+    private interface UnExprFactory {
+        CommonExpression create( CommonExpression left );
     }
 
     private final static Map<BinaryOperationTableEntry, BiExprFactory>
         biFactories = Map.of(
-            CheckedAdd.entry, new BiExprFactory(CheckedAdd::new, CheckedAdd.entry),
-            CheckedSubtract.entry, new BiExprFactory(CheckedSubtract::new, CheckedSubtract.entry),
-            CheckedDivide.entry, new BiExprFactory(CheckedDivide::new, CheckedDivide.entry),
-            CheckedMultiply.entry, new BiExprFactory(CheckedMultiply::new, CheckedMultiply.entry),
-            CheckedPow.entry, new BiExprFactory(CheckedPow::new, CheckedPow.entry),
-            CheckedLog.entry, new BiExprFactory(CheckedLog::new, CheckedLog.entry)
+            CheckedAdd.entry, CheckedAdd::new,
+            CheckedSubtract.entry, CheckedSubtract::new,
+            CheckedDivide.entry, CheckedDivide::new,
+            CheckedMultiply.entry, CheckedMultiply::new,
+            CheckedPow.entry, CheckedPow::new,
+            CheckedLog.entry, CheckedLog::new
         );
     private final static Map<UnaryOperationTableEntry, UnExprFactory>
         unFactories = Map.of(
-            CheckedNegate.entry, new UnExprFactory(CheckedNegate::new, CheckedNegate.entry),
-            CheckedLog2.entry, new UnExprFactory(CheckedLog2::new, CheckedLog2.entry),
-            CheckedPow2.entry, new UnExprFactory(CheckedPow2::new, CheckedPow2.entry)
+            CheckedNegate.entry, CheckedNegate::new,
+            CheckedLog2.entry, CheckedLog2::new,
+            CheckedPow2.entry, CheckedPow2::new
         );
 
     public ExpressionParser() {
@@ -107,15 +76,16 @@ public class ExpressionParser implements Parser {
                 expect(TokenType.RIGHT_PAR);
             } else if (testNoShift(TokenType.NAME)) {
                 if (outVarNames != null) {
-                    outVarNames.add(tokenData.name);
+                    outVarNames.add(tokenData.get());
                 }
                 nextToken();
-                left = new Variable(lastData.name);
+                left = new Variable(lastData.get());
             } else if (test(TokenType.UNARY_OP)) {
-                left = unFactories.get(lastData.unOp).create(parseSubexpression(lastData.unOp.getPriority(), outVarNames));
+                UnaryOperationTableEntry op = lastData.get();
+                left = unFactories.get(op).create(parseSubexpression(op.getPriority(), outVarNames));
             } else {
                 expect(TokenType.NUMBER);
-                left = lastData.val;
+                left = lastData.get();
             }
 
             while (true) {
@@ -124,12 +94,13 @@ public class ExpressionParser implements Parser {
                 }
 
                 expectNoShift(TokenType.BINARY_OP);
-                if (tokenData.biOp.getPriority() >= lastPriority) {
+                BinaryOperationTableEntry op = tokenData.get();
+                if (op.getPriority() >= lastPriority) {
                     return left;
                 } else {
                     nextToken();
-                    int prior = lastData.biOp.getPriority();
-                    left = biFactories.get(lastData.biOp).create(left, parseSubexpression(prior, outVarNames));
+                    int prior = op.getPriority();
+                    left = biFactories.get(op).create(left, parseSubexpression(prior, outVarNames));
                 }
             }
         }

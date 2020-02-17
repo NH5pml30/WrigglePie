@@ -20,38 +20,54 @@ namespace KmaxTask
         {
             internal Node parent = null;
             internal Tree<T> enclosing;
-            internal int siblingIndex = -1;
+            internal Node[] children;
+            internal int[] keys;
+
+            virtual internal Node this[int index]
+            {
+                get => children[index];
+                set
+                {
+                    value.parent = this;
+                    children[index] = value;
+                }
+            }
+
+            internal Node(Node other)
+            {
+                parent = other.parent;
+                enclosing = other.enclosing;
+            }
+
+            internal Node() { }
         }
 
         private class Node2 : Node
         {
-            internal int key;
-            internal Node left, right;
-
-            Node2(Node3 node, int keyAt, int nodeAt)
+            internal Node2(Node3 from, int keyAt, int nodeAt) : base(from)
             {
-                key = keyAt == 0 ? node.key1 : node.key0;
-                left = nodeAt == 0 ? node.middle : node.left;
-                right = nodeAt == 2 ? node.middle : node.right;
-                left.parent = right.parent = this;
+                keys = new int[1] { from.keys[1 - keyAt] };
+                children = new Node[2]
+                {
+                    from.children[nodeAt == 0 ? 1 : 0],
+                    children[1] = from.children[nodeAt == 1 ? 2 : 1]
+                };
             }
         }
 
         private class Node3 : Node
         {
-            internal int key0, key1;
-            internal Node left, middle, right;
-
-            Node3(Node2 from, int key, int keyAt, Node node, int nodeAt)
+            internal Node3(Node2 from, int key, int keyAt, Node node, int nodeAt) : base(from)
             {
-                (key0, key1) = keyAt == 0 ? (key, from.key) : (from.key, key);
+                keys = keyAt == 0 ?
+                    new int[2] { key, from.keys[0] } :
+                    new int[2] { from.keys[0], key };
 
-                (left, middle, right) =
-                    nodeAt == 0 ?
-                        (node, from.left, from.right) :
-                        nodeAt == 1 ?
-                            (from.left, node, from.right) :
-                            (from.left, from.right, node);
+                children = nodeAt == 0 ?
+                    new Node[3] { node, from.children[0], from.children[1] } :
+                    nodeAt == 1 ?
+                        new Node[3] { from.children[0], node, from.children[1] } :
+                        new Node[3] { from.children[0], from.children[1], node };
             }
         }
 

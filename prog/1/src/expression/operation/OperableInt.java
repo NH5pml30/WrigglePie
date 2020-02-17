@@ -7,17 +7,19 @@ public class OperableInt {
     }
 
     public static int add( int left, int right ) {
-        if (right > 0 && left > Integer.MAX_VALUE - right ||
-            right < 0 && left < Integer.MIN_VALUE - right) {
+        if (right > 0 && left > Integer.MAX_VALUE - right) {
             throw new BinaryOverflowException(left, right);
+        } else if (right < 0 && left < Integer.MIN_VALUE - right) {
+            throw new BinaryUnderflowException(left, right);
         }
         return left + right;
     }
 
     public static int subtract( int left, int right ) {
-        if (right < 0 && left > Integer.MAX_VALUE + right ||
-            right > 0 && left < Integer.MIN_VALUE + right) {
+        if (right < 0 && left > Integer.MAX_VALUE + right) {
             throw new BinaryOverflowException(left, right);
+        } else if (right > 0 && left < Integer.MIN_VALUE + right) {
+            throw new BinaryUnderflowException(left, right);
         }
         return left - right;
     }
@@ -35,7 +37,11 @@ public class OperableInt {
         int res = left * right;
         if (left == -1 && right == Integer.MIN_VALUE ||
             left != 0 && res / left != right) {
-            throw new BinaryOverflowException(left, right);
+            if ((left > 0) != (right > 0)) {
+                throw new BinaryUnderflowException(left, right);
+            } else {
+                throw new BinaryOverflowException(left, right);
+            }
         }
         return res;
     }
@@ -91,9 +97,19 @@ public class OperableInt {
     }
 
     public static int pow2( int x ) {
-        if (!(x >= 0 && x <= 31)) {
+        if (x >= 32) {
             throw new UnaryOverflowException(x);
+        } else if (x < 0) {
+            throw new Pow2NegException(x);
         }
         return 1 << x;
+    }
+
+    public static int parse( String strVal ) {
+        try {
+            return Integer.parseInt(strVal);
+        } catch ( NumberFormatException e ) {
+            throw new ReadNumberException("number too long for signed 32-bit");
+        }
     }
 }

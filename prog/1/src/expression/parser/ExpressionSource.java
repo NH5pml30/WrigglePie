@@ -26,37 +26,31 @@ public abstract class ExpressionSource {
     }
 
     static final class TokenData {
-        final Const val;
-        final String name;
-        final BinaryOperationTableEntry biOp;
-        final UnaryOperationTableEntry unOp;
+        final Object data;
+
+        private TokenData( Object data ) {
+            this.data = data;
+        }
 
         TokenData( Const val ) {
-            this.val = val;
-            this.name = null;
-            this.biOp = null;
-            this.unOp = null;
+            this((Object)val);
         }
 
         TokenData( String name ) {
-            this.val = null;
-            this.name = name;
-            this.biOp = null;
-            this.unOp = null;
+            this((Object)name);
         }
 
         TokenData( BinaryOperationTableEntry op ) {
-            this.val = null;
-            this.name = null;
-            this.biOp = op;
-            this.unOp = null;
+            this((Object)op);
         }
 
         TokenData( UnaryOperationTableEntry op ) {
-            this.val = null;
-            this.name = null;
-            this.biOp = null;
-            this.unOp = op;
+            this((Object)op);
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T get() {
+            return (T)data;
         }
     }
 

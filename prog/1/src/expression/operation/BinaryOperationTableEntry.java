@@ -1,30 +1,24 @@
 package expression.operation;
 
 public enum BinaryOperationTableEntry implements OperationTableBase {
-    ADD(2, "+", true),
-    SUBTRACT(2, "-", false),
-    MULTIPLY(1, "*", true),
-    DIVIDE(1, "/", false),
-    POW(0, "**", false),
-    LOG(0, "//", false);
+    ADD(2, "+"),
+    SUBTRACT(2, "-"),
+    MULTIPLY(1, "*"),
+    DIVIDE(1, "/"),
+    POW(0, "**"),
+    LOG(0, "//");
 
     final int priority;
     final String symbol;
-    final Boolean isAssoc;
 
-    BinaryOperationTableEntry( int priority, String symbol, Boolean isAssoc ) {
+    BinaryOperationTableEntry( int priority, String symbol ) {
         this.priority = priority;
         this.symbol = symbol;
-        this.isAssoc = isAssoc;
     }
 
     @Override
     public String toString() {
         return symbol;
-    }
-
-    public boolean getAssoc() {
-        return isAssoc;
     }
 
     @Override
