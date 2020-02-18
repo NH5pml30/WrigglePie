@@ -2,7 +2,7 @@ package expression.operation;
 
 import expression.exception.*;
 
-public class OperableInt {
+public final class OperableInt {
     private OperableInt() {
     }
 
