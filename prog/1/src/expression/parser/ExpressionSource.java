@@ -32,7 +32,7 @@ public abstract class ExpressionSource {
             this.data = data;
         }
 
-        TokenData( Const val ) {
+        TokenData( Integer val ) {
             this((Object)val);
         }
 
@@ -48,7 +48,6 @@ public abstract class ExpressionSource {
             this((Object)op);
         }
 
-        @SuppressWarnings("unchecked")
         <T> T get() {
             return (T)data;
         }

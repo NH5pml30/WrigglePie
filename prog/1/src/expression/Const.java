@@ -1,6 +1,5 @@
 package expression;
 
-import expression.exception.ReadNumberException;
 import expression.operation.OperableInt;
 
 import java.util.Map;
@@ -11,10 +10,6 @@ public class Const implements CommonExpression {
 
     public Const( final int value ) {
         this.value = value;
-    }
-
-    public Const( final String strVal ) {
-        this.value = OperableInt.parse(strVal);
     }
 
     @Override

@@ -85,7 +85,7 @@ public class ExpressionParser implements Parser {
                 left = unFactories.get(op).create(parseSubexpression(op.getPriority(), outVarNames));
             } else {
                 expect(TokenType.NUMBER);
-                left = lastData.get();
+                left = new Const(lastData.get());
             }
 
             while (true) {

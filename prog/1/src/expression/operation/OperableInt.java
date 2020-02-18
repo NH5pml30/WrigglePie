@@ -55,9 +55,12 @@ public class OperableInt {
     }
 
     public static int pow( int base, int exp ) {
-        if (exp < 0 || base == 0 && exp == 0) {
-            throw new PowException(base, exp);
+        if (exp < 0) {
+            throw new PowException(base, exp, "negative exponent (makes no sense in integers)");
+        } else if (base == 0 && exp == 0) {
+            throw new PowException(base, exp, "zero to the power zero (undefined)");
         }
+
         int x = base, n = exp;
         try {
             int r = 1;
@@ -77,8 +80,10 @@ public class OperableInt {
     }
 
     public static int log( int x, int base ) {
-        if (base <= 1 || x <= 0) {
-            throw new LogException(x, base);
+        if (base <= 1) {
+            throw new LogException(x, base, "base less or equal to 1");
+        } else if (x <= 0) {
+            throw new LogException(x, base, "non-positive argument");
         }
 
         int res = 0;
@@ -103,13 +108,5 @@ public class OperableInt {
             throw new Pow2NegException(x);
         }
         return 1 << x;
-    }
-
-    public static int parse( String strVal ) {
-        try {
-            return Integer.parseInt(strVal);
-        } catch ( NumberFormatException e ) {
-            throw new ReadNumberException("number too long for signed 32-bit");
-        }
     }
 }

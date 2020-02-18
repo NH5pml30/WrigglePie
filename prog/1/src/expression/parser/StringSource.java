@@ -1,7 +1,5 @@
 package expression.parser;
 
-import expression.Const;
-import expression.exception.ReadNumberException;
 import expression.operation.BinaryOperationTableEntry;
 import expression.operation.UnaryOperationTableEntry;
 
@@ -98,8 +96,8 @@ public class StringSource extends ExpressionSource {
         testState(State.PRE, "number");
         state = State.POST;
         try {
-            cachedData = new TokenData(new Const(strVal));
-        } catch ( ReadNumberException e ) {
+            cachedData = new TokenData(Integer.parseInt(strVal));
+        } catch ( NumberFormatException e ) {
             throw error(e.getMessage() + ": " + strVal);
         }
         cachedTokenType = TokenType.NUMBER;
