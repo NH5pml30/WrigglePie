@@ -35,7 +35,7 @@ public final class BinarySearch {
         // func(R - 1) == false && func(R) == true && R >= 0
         // =>
         // post:
-        // func(y < R) == false && func(y >= R) == true && R >= 0
+        // f(y < R) == false && (if any) f(y >= R) == true && R >= 0
         // (&& R <= arr.length)
         return R;
     }
@@ -74,7 +74,7 @@ public final class BinarySearch {
             // R - L == 1 && func(L) == false && func(R) == true && R >= 0
             // =>
             // post:
-            // func(y < R) == false && func(y >= R) == true && R >= 0
+            // func(y < R) == false && (if any) func(y >= R) == true && R >= 0
             // (&& R <= arr.length)
             return R;
         }
@@ -92,7 +92,7 @@ public final class BinarySearch {
         // func(L) == false && func(R) == true && R >= 0
         return inRecursive(arr, func, -1, arr.length);
         // post:
-        // func(y < r) == false && func(y >= r) == true && r >= 0
+        // f(y < r) == false && (if any) f(y >= r) == true && r >= 0
         // (&& r <= arr.length)
     }
 }

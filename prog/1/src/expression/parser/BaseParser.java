@@ -16,7 +16,7 @@ public class BaseParser {
         this.source = source;
     }
 
-    protected void nextToken() {
+    protected void nextToken() throws ParserException {
         lastData = tokenData;
         token = source.next();
         tokenData = source.tokenData;
@@ -26,7 +26,7 @@ public class BaseParser {
         return token == expected;
     }
 
-    protected boolean test( TokenType expected ) {
+    protected boolean test( TokenType expected ) throws ParserException {
         if (testNoShift(expected)) {
             nextToken();
             return true;
@@ -34,13 +34,13 @@ public class BaseParser {
         return false;
     }
 
-    protected void expectNoShift( TokenType c ) {
+    protected void expectNoShift( TokenType c ) throws ParserException {
         if (token != c) {
             throw error("Expected '" + c.represent + "', found '" + token.represent + "'");
         }
     }
 
-    protected void expect( TokenType c ) {
+    protected void expect( TokenType c ) throws ParserException {
         expectNoShift(c);
         nextToken();
     }

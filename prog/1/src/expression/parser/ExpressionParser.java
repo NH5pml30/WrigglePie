@@ -41,35 +41,39 @@ public class ExpressionParser implements Parser {
     public ExpressionParser() {
     }
 
-    public CommonExpression parse( final String source, Set<String> inVarNames, Set<String> outVarNames ) {
+    public CommonExpression parse( final String source, Set<String> inVarNames, Set<String> outVarNames )
+            throws ParserException {
         return parse(new StringSource(source, inVarNames), outVarNames);
     }
 
-    public CommonExpression parse( final String source, Set<String> outVarNames ) {
+    public CommonExpression parse( final String source, Set<String> outVarNames )
+            throws ParserException {
         return parse(new StringSource(source, Set.of("x", "y", "z")), outVarNames);
     }
 
-    public CommonExpression parse( final String source ) {
+    public CommonExpression parse( final String source )
+            throws ParserException {
         return parse(new StringSource(source, Set.of("x", "y", "z")), null);
     }
 
-    private CommonExpression parse( ExpressionSource source, Set<String> outVarNames ) {
+    private CommonExpression parse( ExpressionSource source, Set<String> outVarNames )
+            throws ParserException {
         return new InnerExprParser(source).parse(outVarNames);
     }
 
     private static class InnerExprParser extends BaseParser {
-        InnerExprParser( final ExpressionSource source ) {
+        InnerExprParser( final ExpressionSource source ) throws ParserException {
             super(source);
             nextToken();
         }
 
-        private CommonExpression parse( Set<String> outVarNames ) {
+        private CommonExpression parse( Set<String> outVarNames ) throws ParserException {
             final CommonExpression res = parseSubexpression(Integer.MAX_VALUE, outVarNames);
             expect(TokenType.NONE);
             return res;
         }
 
-        private CommonExpression parseSubexpression( int lastPriority, Set<String> outVarNames ) {
+        private CommonExpression parseSubexpression( int lastPriority, Set<String> outVarNames ) throws ParserException {
             CommonExpression left;
             if (test(TokenType.LEFT_PAR)) {
                 left = parseSubexpression(Integer.MAX_VALUE, outVarNames);

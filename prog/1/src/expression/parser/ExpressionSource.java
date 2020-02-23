@@ -55,9 +55,7 @@ public abstract class ExpressionSource {
 
     TokenData tokenData;
 
-    abstract boolean hasNext();
-
-    abstract TokenType next();
+    abstract TokenType next() throws ParserException;
 
     abstract ParserException error( final String message );
 }

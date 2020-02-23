@@ -69,7 +69,7 @@ public class StringSource extends ExpressionSource {
         return "";
     }
 
-    private void cacheName( String name ) {
+    private void cacheName( String name ) throws ParserException {
         testState(State.PRE, "variable name '" + name + "'");
         state = State.POST;
         cachedData = new TokenData(name);
@@ -77,7 +77,7 @@ public class StringSource extends ExpressionSource {
         pos += name.length();
     }
 
-    private void cacheBinaryOp( BinaryOperationTableEntry op ) {
+    private void cacheBinaryOp( BinaryOperationTableEntry op ) throws ParserException {
         testState(State.POST, "binary operation '" + op.getSymbol() + "'");
         state = State.PRE;
         cachedData = new TokenData(op);
@@ -85,14 +85,14 @@ public class StringSource extends ExpressionSource {
         pos += op.getSymbol().length();
     }
 
-    private void cacheUnaryOp( UnaryOperationTableEntry op ) {
+    private void cacheUnaryOp( UnaryOperationTableEntry op ) throws ParserException {
         testState(State.PRE, "unary operation '" + op.getSymbol() + "'");
         cachedData = new TokenData(op);
         cachedTokenType = TokenType.UNARY_OP;
         pos += op.getSymbol().length();
     }
 
-    private void cacheNumber( String strVal ) {
+    private void cacheNumber( String strVal ) throws ParserException {
         testState(State.PRE, "number");
         state = State.POST;
         try {
@@ -104,7 +104,7 @@ public class StringSource extends ExpressionSource {
         pos += strVal.length();
     }
 
-    private void cacheNext() {
+    private void cacheNext() throws ParserException {
         if (cachedData != null || state == State.END) {
             return;
         }
@@ -183,7 +183,7 @@ public class StringSource extends ExpressionSource {
         }
     }
 
-    private void expectNext( char ch ) {
+    private void expectNext( char ch ) throws ParserException {
         if (pos + 1 >= data.length()) {
             throw error("expected '" + ch + "' , got end of expression");
         }
@@ -193,20 +193,14 @@ public class StringSource extends ExpressionSource {
     }
 
     @Override
-    public boolean hasNext() {
-        cacheNext();
-        return cachedData != null;
-    }
-
-    @Override
-    public TokenType next() {
+    public TokenType next() throws ParserException {
         cacheNext();
         tokenData = cachedData;
         cachedData = null;
         return cachedTokenType;
     }
 
-    private void testState( State expected, String got ) {
+    private void testState( State expected, String got ) throws ParserException {
         if (state != expected) {
             String message = "expected ";
 

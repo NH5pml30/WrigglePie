@@ -6,17 +6,17 @@ public class BinarySearchBase {
     protected static BinarySearchBase instance = new BinarySearchBase();
 
     protected boolean read(String[] args) {
-        // pre: numbers in args[1].. sorted non-incr
+        // pre: numbers in args[1].. (if any) sorted non-incr
 
         if (args.length < 1) {
             System.out.println("Not enough arguments (needs at least 1)");
             return false;
         }
 
-        // numbers in args[1].. sorted non-incr &&
+        // numbers in args[1].. (if any) sorted non-incr &&
         // args.length >= 1
         arr = new int[args.length - 1];
-        // numbers in args[1].. sorted non-incr &&
+        // numbers in args[1].. (if any) sorted non-incr &&
         // args.length >= 1 && arr.length == args.length - 1
         int j = 0;
         try {

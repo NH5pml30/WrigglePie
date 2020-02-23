@@ -1,6 +1,6 @@
 package expression.exception;
 
-public abstract class EvaluationException extends ExpressionException {
+public abstract class EvaluationException extends RuntimeException {
     private String expr = "";
     private boolean isFilled = false;
 
