@@ -51,7 +51,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>TreapTask.EntryPoint</StartupObject>
+    <StartupObject>KmaxTask.EntryPoint</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -11,276 +11,267 @@ namespace KmaxTask
         bool Exists(T x);
         bool Next(T x, out T key);
         bool Prev(T x, out T key);
-        T KMax(int k);
     }
 
-    class Tree<T> : IBst<T> where T : IComparable
+    internal class Node<T, NodeT>
+        where T : IComparable
+        where NodeT : Node<T, NodeT>
     {
-        private class Node
+        internal NodeT parent = null;
+        internal int siblingIndex = -1;
+        internal List<T> keys;
+        internal List<NodeT> children;
+        internal Tree<T, NodeT> enclosing;
+
+        internal delegate NodeT NodeFactory(Tree<T, NodeT> enclosing, List<T> keys, List<NodeT> children);
+
+        internal Node(Tree<T, NodeT> enclosing,
+                      List<T> keys,
+                      List<NodeT> children)
         {
-            internal Node parent = null;
-            internal Tree<T> enclosing;
-            internal Node[] children;
-            internal int[] keys;
+            this.enclosing = enclosing;
+            this.keys = keys;
+            this.children = children;
 
-            virtual internal Node this[int index]
-            {
-                get => children[index];
-                set
-                {
-                    value.parent = this;
-                    children[index] = value;
-                }
-            }
-
-            internal Node(Node other)
-            {
-                parent = other.parent;
-                enclosing = other.enclosing;
-            }
-
-            internal Node() { }
+            OnChanged();
         }
 
-        private class Node2 : Node
+        internal virtual void OnChanged()
         {
-            internal Node2(Node3 from, int keyAt, int nodeAt) : base(from)
+            int index = 0;
+            foreach (NodeT child in children)
             {
-                keys = new int[1] { from.keys[1 - keyAt] };
-                children = new Node[2]
-                {
-                    from.children[nodeAt == 0 ? 1 : 0],
-                    children[1] = from.children[nodeAt == 1 ? 2 : 1]
-                };
+                child.parent = (NodeT)this;
+                child.siblingIndex = index++;
             }
         }
 
-        private class Node3 : Node
+        internal static void Walk(NodeT at, Func<NodeT, int> func)
         {
-            internal Node3(Node2 from, int key, int keyAt, Node node, int nodeAt) : base(from)
+            while (at != null)
             {
-                keys = keyAt == 0 ?
-                    new int[2] { key, from.keys[0] } :
-                    new int[2] { from.keys[0], key };
-
-                children = nodeAt == 0 ?
-                    new Node[3] { node, from.children[0], from.children[1] } :
-                    nodeAt == 1 ?
-                        new Node[3] { from.children[0], node, from.children[1] } :
-                        new Node[3] { from.children[0], from.children[1], node };
+                int childAt = func(at);
+                if (childAt >= 0 && childAt < at.children.Count)
+                    at = at.children[childAt];
+                else
+                    at = null;
             }
         }
 
-        private class Node4
+        private static (T key, NodeT node) NextNode(NodeT at, T x)
         {
-            internal Node parent = null;
-            internal int siblingIndex = -1;
-            internal List<T> keys;
-            internal List<Node> children;
-            internal Tree<T> enclosing;
-            internal int subtreeSize = 0;
+            T key = x;
+            NodeT node = null;
 
-            internal Node(Tree<T> enclosing,
-                          List<T> keys,
-                          List<Node> children)
-            {
-                this.enclosing = enclosing;
-                this.keys = keys;
-                this.children = children;
-
-                int index = 0;
-                subtreeSize = 1;
-                foreach (Node child in this.children)
+            Walk(at,
+                (NodeT self) =>
                 {
-                    child.parent = this;
-                    child.siblingIndex = index++;
-                    subtreeSize += child.subtreeSize;
+                    int childAt = self.keys.BinarySearch(x), keyAt;
+                    if (childAt >= 0)
+                        keyAt = ++childAt;
+                    else
+                        keyAt = (childAt = ~childAt);
+
+                    if (keyAt >= 0 && keyAt < self.keys.Count &&
+                        (key.Equals(x) || self.keys[keyAt].CompareTo(key) < 0))
+                    {
+                        node = self;
+                        key = self.keys[keyAt];
+                    }
+
+                    if (self.children.Any())
+                        return childAt;
+                    return -1;
                 }
-            }
+            );
 
-            private void NextNode(T x, ref T key, ref Node node)
-            {
-                int childAt = keys.BinarySearch(x), keyAt;
-                if (childAt >= 0)
-                    keyAt = ++childAt;
-                else
-                    keyAt = (childAt = ~childAt);
+            return (key, node);
+        }
 
-                if (keyAt >= 0 && keyAt < keys.Count &&
-                    (key.Equals(x) || keys[keyAt].CompareTo(key) < 0))
+        internal NodeT NextNode(T x, out T key)
+        {
+            (T lKey, NodeT node) = NextNode((NodeT)this, x);
+            key = lKey;
+            return node;
+        }
+
+        private static (T key, NodeT node) PrevNode(NodeT at, T x)
+        {
+            T key = x;
+            NodeT node = null;
+
+            Walk(at,
+                (NodeT self) =>
                 {
-                    node = this;
-                    key = keys[keyAt];
+                    int childAt = self.keys.BinarySearch(x), keyAt;
+                    if (childAt >= 0)
+                        keyAt = childAt - 1;
+                    else
+                        keyAt = (childAt = ~childAt) - 1;
+
+                    if (keyAt >= 0 && keyAt < self.keys.Count &&
+                        (key.Equals(x) || self.keys[keyAt].CompareTo(key) > 0))
+                    {
+                        node = self;
+                        key = self.keys[keyAt];
+                    }
+
+                    if (self.children.Any())
+                        return childAt;
+                    return -1;
                 }
+            );
 
-                if (children.Any())
-                    children[childAt].NextNode(x, ref key, ref node);
-            }
+            return (key, node);
+        }
 
-            internal Node NextNode(T x, out T key)
-            {
-                key = x;
-                Node node = null;
-                NextNode(x, ref key, ref node);
-                return node;
-            }
+        internal NodeT PrevNode(T x, out T key)
+        {
+            (T lKey, NodeT node) = PrevNode((NodeT)this, x);
+            key = lKey;
+            return node;
+        }
 
-            private void PrevNode(T x, ref T key, ref Node node)
-            {
-                int childAt = keys.BinarySearch(x), keyAt;
-                if (childAt >= 0)
-                    keyAt = childAt - 1;
-                else
-                    keyAt = (childAt = ~childAt) - 1;
+        internal static NodeT Find(NodeT at, T x)
+        {
+            NodeT node = null;
 
-                if (keyAt >= 0 && keyAt < keys.Count &&
-                    (key.Equals(x) || keys[keyAt].CompareTo(key) > 0))
+            Walk(at,
+                (NodeT self) =>
                 {
-                    node = this;
-                    key = keys[keyAt];
+                    if (!self.children.Any())
+                    {
+                        node = self;
+                        return -1;
+                    }
+
+                    int childAt = self.keys.BinarySearch(x);
+                    if (childAt >= 0)
+                    {
+                        node = self;
+                        return -1;
+                    }
+                    return ~childAt;
                 }
+            );
 
-                if (children.Any())
-                    children[childAt].PrevNode(x, ref key, ref node);
-            }
+            return node;
+        }
 
-            internal Node PrevNode(T x, out T key)
+        internal T Split(NodeFactory factory, out NodeT right)
+        {
+            bool isLeaf = !children.Any();
+            right = factory(
+                enclosing,
+                keys.GetRange(2, 1),
+                isLeaf ?
+                    new List<NodeT>() :
+                    children.GetRange(2, 2)
+                );
+            T res = keys[1];
+            keys.RemoveRange(1, 2);
+            if (!isLeaf)
+                children.RemoveRange(2, 2);
+            OnChanged();
+            return res;
+        }
+
+        internal void Append(int keyAt, T key, bool isRightNode, NodeT node)
+        {
+            keys.Insert(keyAt, key);
+            int nodeAt = keyAt + (isRightNode ? 1 : 0);
+            children.Insert(nodeAt, node);
+            node.parent = (NodeT)this;
+            node.siblingIndex = nodeAt;
+            OnChanged();
+        }
+
+        internal T Remove(int keyAt, bool isRightNode)
+        {
+            T key = keys[keyAt];
+            keys.RemoveAt(keyAt);
+
+            int childAt = keyAt + (isRightNode ? 1 : 0);
+            children[childAt].parent = null;
+            children[childAt].siblingIndex = -1;
+            children.RemoveAt(childAt);
+            OnChanged();
+            return key;
+        }
+
+        internal void Insert(T x)
+        {
+            if (!children.Any())
             {
-                key = x;
-                Node node = null;
-                PrevNode(x, ref key, ref node);
-                return node;
-            }
-
-            internal Node Find(T x)
-            {
-                if (!children.Any())
-                    return this;
-                else
-                {
-                    int at = keys.BinarySearch(x);
-                    if (at >= 0)
-                        return this;
-                    return children[~at].Find(x);
-                }
-            }
-
-            internal T Split(out Node right)
-            {
-                bool isLeaf = !children.Any();
-                right = new Node(
-                    enclosing,
-                    keys.GetRange(2, 1),
-                    isLeaf ?
-                        new List<Node>() :
-                        children.GetRange(2, 2)
-                    );
-                T res = keys[1];
-                keys.RemoveRange(1, 2);
-                if (!isLeaf)
-                {
-                    subtreeSize -= children[2].subtreeSize + children[3].subtreeSize;
-                    children.RemoveRange(2, 2);
-                }
-                return res;
-            }
-
-            internal void Append(int keyAt, T key, bool isRightNode, Node node)
-            {
-                keys.Insert(keyAt, key);
-                int nodeAt = keyAt + (isRightNode ? 1 : 0);
-                children.Insert(nodeAt, node);
-                subtreeSize += node.subtreeSize;
-                node.parent = this;
-                node.siblingIndex = nodeAt;
-                for (int index = nodeAt + 1; index < children.Count; index++)
-                    children[index].siblingIndex++;
-            }
-
-            internal T Remove(int keyAt, bool isRightNode)
-            {
-                T key = keys[keyAt];
-                keys.RemoveAt(keyAt);
-
-                int childAt = keyAt + (isRightNode ? 1 : 0);
-                children[childAt].parent = null;
-                children[childAt].siblingIndex = -1;
-                subtreeSize -= children[childAt].subtreeSize;
-                children.RemoveAt(childAt);
-
-                for (int i = childAt; i < children.Count; i++)
-                    children[i].siblingIndex--;
-
-                return key;
-            }
-
-            internal void UpdateSize()
-            {
-                subtreeSize = 1;
-                foreach (Node child in children)
-                    subtreeSize += child.subtreeSize;
-            }
-
-            internal void Insert(T x)
-            {
-                if (!children.Any())
+                if (!keys.Contains(x))
                 {
                     keys.Add(x);
                     keys.Sort();
-                    enclosing.Update(this);
-                }
-                else
-                {
-                    int at = keys.BinarySearch(x);
-                    if (at < 0)
-                    {
-                        children[~at].Insert(x);
-                        UpdateSize();
-                    }
+                    enclosing.Update((NodeT)this);
                 }
             }
-
-            internal void Delete(T x)
+            else
             {
-                if (!children.Any())
-                {
-                    if (keys.Contains(x))
-                    {
-                        keys.Remove(x);
-                        enclosing.Update(this);
-                    }
-                }
-                else
-                {
-                    int at = keys.BinarySearch(x);
-                    if (at >= 0)
-                    {
-                        Node next = NextNode(x, out T key);
-                        next.Delete(x);
-                        enclosing.Update(next);
-                        Node place = enclosing.Root.Find(x);
-                        place.keys[place.keys.IndexOf(x)] = key;
-                    }
-                    else
-                        children[~at].Delete(x);
-                }
+                int at = keys.BinarySearch(x);
+                if (at < 0)
+                    children[~at].Insert(x);
             }
         }
 
-        private Node Root;
-
-        public Tree()
+        internal void Delete(T x)
         {
-            Root = new Node(this, new List<T>(), new List<Node>());
+            if (!children.Any())
+            {
+                if (keys.Contains(x))
+                {
+                    keys.Remove(x);
+                    enclosing.Update((NodeT)this);
+                }
+            }
+            else
+            {
+                int at = keys.BinarySearch(x);
+                if (at >= 0)
+                {
+                    NodeT next = NextNode(x, out T key);
+                    next.Delete(key);
+                    Node<T, NodeT> place = Find(enclosing.Root, x);
+                    place.keys[place.keys.IndexOf(x)] = key;
+                }
+                else
+                    children[~at].Delete(x);
+            }
+        }
+    }
+
+    class Tree<T, NodeT> : IBst<T>
+        where T : IComparable
+        where NodeT : Node<T, NodeT>
+    {
+        internal NodeT Root;
+
+        static NodeT DefaultFactory(Tree<T, NodeT> enclosing, List<T> keys, List<NodeT> children)
+        {
+            return (NodeT)new Node<T, NodeT>(enclosing, keys, children);
+        }
+        readonly Node<T, NodeT>.NodeFactory creator;
+
+        public Tree(Node<T, NodeT>.NodeFactory factory)
+        {
+            creator = factory;
+            Root = creator(this, new List<T>(), new List<NodeT>());
         }
 
-
-        private void HandleOverflow(Node at)
+        public Tree() : this(DefaultFactory)
         {
-            T key = at.Split(out Node right);
+        }
+
+        private void HandleOverflow(NodeT at)
+        {
+            T key = at.Split(creator, out NodeT right);
 
             if (ReferenceEquals(at, Root))
-                Root = new Node(this, new List<T>() { key }, new List<Node>() { at, right });
+                Root = creator(this, new List<T>() { key }, new List<NodeT>() { at, right });
             else
             {
                 at.parent.Append(at.siblingIndex, key, true, right);
@@ -288,9 +279,9 @@ namespace KmaxTask
             }
         }
 
-        private Node MergeWithSibling(Node self)
+        private NodeT MergeWithSibling(NodeT self)
         {
-            Node sibling;
+            NodeT sibling;
             if (self.siblingIndex == 0)
             {
                 sibling = self.parent.children[1];
@@ -298,7 +289,10 @@ namespace KmaxTask
                 if (self.children.Any())
                     sibling.Append(0, key, false, self.children[0]);
                 else
+                {
                     sibling.keys.Insert(0, key);
+                    sibling.OnChanged();
+                }
             }
             else
             {
@@ -307,21 +301,25 @@ namespace KmaxTask
                 if (self.children.Any())
                     sibling.Append(sibling.keys.Count, key, true, self.children[0]);
                 else
+                {
                     sibling.keys.Insert(sibling.keys.Count, key);
+                    sibling.OnChanged();
+                }
             }
             self.children.Clear();
             self.keys.Clear();
 
+            sibling.parent.OnChanged();
             return sibling;
         }
 
-        private void HandleUnderflow(Node at)
+        private void HandleUnderflow(NodeT at)
         {
             if (ReferenceEquals(at, Root))
             {
                 if (at.children.Any())
                 {
-                    Node newRoot = at.children[0];
+                    NodeT newRoot = at.children[0];
 
                     at.children.Clear();
                     at.keys.Clear();
@@ -333,7 +331,7 @@ namespace KmaxTask
             }
             else
             {
-                Node sibling = MergeWithSibling(at);
+                NodeT sibling = MergeWithSibling(at);
 
                 if (sibling.keys.Count == 3)
                     HandleOverflow(sibling);
@@ -342,12 +340,15 @@ namespace KmaxTask
             }
         }
 
-        private void Update(Node at)
+        internal void Update(NodeT at)
         {
+            at.OnChanged();
             if (at.keys.Count == 0)
                 HandleUnderflow(at);
             else if (at.keys.Count == 3)
                 HandleOverflow(at);
+            else if (at.parent != null)
+                Update(at.parent);
         }
 
         public void Insert(T x) => Root.Insert(x);
@@ -356,47 +357,136 @@ namespace KmaxTask
 
         public bool Exists(T x)
         {
-            Node node = Root.Find(x);
+            NodeT node = Node<T, NodeT>.Find(Root, x);
             return node.keys.Contains(x);
         }
 
         public bool Next(T x, out T key) => Root.NextNode(x, out key) != null;
 
         public bool Prev(T x, out T key) => Root.PrevNode(x, out key) != null;
+    }
 
-        public T KMax(int k)
+    interface IKmax<T> where T : IComparable
+    {
+        void Insert(T x);
+        T Kmax(int k);
+        void Delete(T x);
+    }
+
+    internal class NodeSize<T> : Node<T, NodeSize<T>>
+        where T : IComparable
+    {
+        int subtreeSize;
+
+        void UpdateSize()
         {
-            throw new NotImplementedException();
+            subtreeSize = keys.Count;
+            foreach (NodeSize<T> child in children)
+                subtreeSize += child.subtreeSize;
         }
+
+        internal override void OnChanged()
+        {
+            base.OnChanged();
+            UpdateSize();
+        }
+
+        internal NodeSize(
+                Tree<T, NodeSize<T>> enclosing,
+                List<T> keys,
+                List<NodeSize<T>> children
+            ) : base(enclosing, keys, children)
+        {
+        }
+
+        internal static T Kmax(NodeSize<T> at, int k)
+        {
+            T key = at.keys[0];
+            k = at.subtreeSize - k + 1;
+
+            Walk(at,
+                (NodeSize<T> self) =>
+                {
+                    if (!self.children.Any())
+                    {
+                        key = self.keys[k - 1];
+                        return -1;
+                    }
+
+                    int childAt = 0;
+                    for (childAt = 0; childAt < self.children.Count - 1; childAt++)
+                    {
+                        if (k <= self.children[childAt].subtreeSize)
+                            break;
+                        k -= self.children[childAt].subtreeSize;
+                        if (k == 1)
+                        {
+                            key = self.keys[childAt];
+                            childAt = -1;
+                            break;
+                        }
+                        k--;
+                    }
+                    return childAt;
+                }
+                );
+            return key;
+        }
+
+        internal bool Check()
+        {
+            int size = keys.Count;
+            foreach (NodeSize<T> child in children)
+            {
+                if (!child.Check())
+                    return false;
+                size += child.subtreeSize;
+            }
+            return size == subtreeSize;
+        }
+    }
+
+    class KmaxTree<T> : Tree<T, NodeSize<T>>, IKmax<T>
+        where T : IComparable
+    {
+        public KmaxTree() :
+            base(
+                    (Tree<T, NodeSize<T>> enclosing, List<T> keys, List<NodeSize<T>> children) =>
+                        new NodeSize<T>(enclosing, keys, children)
+                )
+        {
+        }
+
+        public T Kmax(int k)
+        {
+            return NodeSize<T>.Kmax(Root, k);
+        }
+
+        public bool Check() => Root.Check();
     }
 
     class EntryPoint
     {
         static void Main(string[] args)
         {
-            Tree<int> tree = new Tree<int>();
+            KmaxTree<int> tree = new KmaxTree<int>();
 
-            string s;
-            while ((s = Console.ReadLine()) != null)
+            int n = Convert.ToInt32(Console.ReadLine());
+            for (int i = 0; i < n; i++)
             {
-                string[] command = s.Split(' ');
-                int arg = Convert.ToInt32(command[1]), key;
+                string[] command = Console.ReadLine().Split(' ');
+                int arg = Convert.ToInt32(command[1]);
                 switch (command[0])
                 {
-                    case "insert":
+                    case "1":
+                    case "+1":
                         tree.Insert(arg);
                         break;
-                    case "delete":
+                    case "-1":
                         tree.Delete(arg);
                         break;
-                    case "exists":
-                        Console.WriteLine(tree.Exists(arg).ToString().ToLower());
-                        break;
-                    case "next":
-                        Console.WriteLine(tree.Next(arg, out key) ? key.ToString() : "none");
-                        break;
-                    case "prev":
-                        Console.WriteLine(tree.Prev(arg, out key) ? key.ToString() : "none");
+                    case "0":
+                        Console.WriteLine(tree.Kmax(arg));
                         break;
                 }
             }
