@@ -3,33 +3,30 @@ package search;
 import static search.util.BinarySearch.*;
 
 public class BinarySearchMissing extends BinarySearchBase {
+    // pre:
+    // valid 32-bit signed integer number in args[0] -- x
+    // (if any) valid 32-bit signed integer numbers in args[1].. sorted non-incr -- arr
+    // post:
+    // prints res:
+    //   if x in arr:
+    //     first occurrence of x in arr
+    //   else:
+    //     res -- (-(insertion point) - 1),
+    //     insertion point:
+    //       index of first element less than x or arr.length if none exists
     public static void main(String[] args) {
-        // pre: numbers in args[1].. sorted non-incr
-
         if (!instance.read(args)) {
             return;
         }
-        // args.length >= 1 && x is valid &&
-        // arr.length == args.length - 1 &&
-        // arr[i] is valid (sorted non-increasing) and read (i in arr)
         int res = iterativeSearch(instance.arr, y -> y <= instance.x);
-        // arr is sorted non-increasing &&
-        // (res == arr.length || arr[y >= res] <= x) && arr[y < res] > x
+        // arr[y < res] > x && arr[y >= res] <= x
         if (res == instance.arr.length || instance.arr[res] != instance.x) {
-            // arr is sorted non-increasing &&
-            // (res == arr.length || arr[y >= res] <= x) && arr[y < res] > x &&
-            // (res == arr.length || arr[res] != x)
-            // =>
-            // res == arr.length && arr[y < res] != x ||
-            // arr[res] != x && arr[y > res] <= arr[res] < x && arr[y < res] > x
-            // =>
-            // doesn't exist y: arr[y] == x &&
-            // arr[y < res] > x && arr[y >= res] < x
+            //   res == arr.length => arr[for all y] < x
+            //   arr[res] != x => arr[y >= res] < arr[res] < x && arr[y < res] < x
+            // => no x
             res = -res - 1;
         }
-        // x in arr ?
-        //   arr[y >= res] <= x && arr[y < res] > x :
-        //   place for x is at -(res + 1)
+        // else arr[res] == x, arr[y < res] > x
         System.out.println(res);
     }
 }

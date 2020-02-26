@@ -7,9 +7,11 @@ public class BinarySearchFunc {
         this.i = i;
     }
 
+    // pre: at in [-1 : arr.length]
+    // post:
+    // (if any) apply(y < at) <= r && (if any) apply(y > at) >= r &&
+    // apply(at == -1) == false && apply(at == arr.length) == true
     boolean apply(int[] arr, int at) {
-        // pre: at in [-1 : arr.length]
-
         if (at == -1) {
             return false;
         }
@@ -19,14 +21,11 @@ public class BinarySearchFunc {
         }
         // at >= 0 && at < arr.length
         return i.apply(arr[at]);
-        // post:
         // i.apply is monotonically increasing on [0 : arr.length) &&
         // apply(at == -1) == false && apply(at == arr.length) == true
         // <=>
         // apply is monotonically increasing on [-1 : arr.length] &&
         // apply(at == -1) == false && apply(at == arr.length) == true
-        // <=>
-        // apply(y < r) <= r && apply(y > r) >= r &&
-        // apply(at == -1) == false && apply(at == arr.length) == true
+        // => post
     }
 }
