@@ -5,26 +5,26 @@ import java.util.Arrays;
 public class ArrayQueue {
     private int begin = 0, size = 0;
     private Object[] elements = new Object[5];
-    // inv:
-    // elements.length >= size >= 0 &&
-    // elements.length >= 5 &&
-    // elements.length > begin >= 0 &&
-    // for all i 0..size-1: elements[(begin + i) % elements.length] -- (i+1)-th element in queued order &&
-    // for all i size..elements.length elements[(begin + i) % elements.length] == null
 
+    // inv:
+    // n >= 0 &&
+    // for all i = 1..n a[i] != null
+
+    // immutable <=> n = n' && for all i=1..n : a[i]' = a[i]
+
+    // pre: element != null
+    // post:
+    // n = n' + 1 &&
+    // for all i=1..n' : a[i]' = a[i] &&
+    // a[n] = element
     public void enqueue(Object element) {
-        // pre: elements != null
         assert element != null;
 
         ensureCapacity(size + 1);
         elements[(begin + size++) % elements.length] = element;
-        // post:
-        // size -> size + 1 &&
-        // (size-1)-th element in queued order -- element
     }
 
     private void ensureCapacity(int capacity) {
-        // pre: none
         while (capacity > elements.length) {
             Object[] newElements = Arrays.copyOfRange(elements, begin, elements.length * 2);
             System.arraycopy(
@@ -34,19 +34,19 @@ public class ArrayQueue {
             begin = 0;
             elements = newElements;
         }
-        // post:
-        // elements.length >= capacity
     }
 
+    // pre: n > 0
+    // post: r = a[1] && immutable
     public Object element() {
-        // pre: size > 0
         assert size > 0;
         return elements[begin];
-        // post: r -- first element in queued order && size' == size > 0
     }
 
+    // pre: n > 0
+    // post:
+    // r = a[1]' && n = n' - 1 && for all i=1..n : a[i+1]' = a[i]
     public Object dequeue() {
-        // pre: size > 0
         assert size > 0;
 
         Object res = elements[begin];
@@ -54,25 +54,24 @@ public class ArrayQueue {
         begin = (begin + 1) % elements.length;
         size--;
         return res;
-        // post: r -- previously first element in queued order && size' == size - 1
     }
 
+    // pre: none
+    // post: r = n && immutable
     public int size() {
-        // pre: none
         return size;
-        // post: r = size
     }
 
+    // pre: none
+    // post: r = (n == 0) && immutable
     public boolean isEmpty() {
-        // pre: none
         return size == 0;
-        // post: r == (size == 0)
     }
 
+    // pre: none
+    // post: n = 0
     public void clear() {
-        // pre: none
         size = 0;
         Arrays.fill(elements, null);
-        // post: size = 0
     }
 }
