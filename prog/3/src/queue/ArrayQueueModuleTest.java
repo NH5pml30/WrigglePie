@@ -2,7 +2,10 @@ package queue;
 
 public class ArrayQueueModuleTest {
     public static void fill() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 30; i++) {
+            if (i % 2 == 1) {
+                ArrayQueueModule.dequeue();
+            }
             ArrayQueueModule.enqueue(i);
         }
     }

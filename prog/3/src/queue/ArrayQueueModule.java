@@ -15,14 +15,18 @@ public class ArrayQueueModule {
 
     private static void ensureCapacity(int capacity) {
         if (capacity > elements.length) {
-            Object[] newElements = Arrays.copyOfRange(elements, begin, elements.length * 2);
-            System.arraycopy(
-                    elements, 0,
-                    newElements, elements.length - begin, size
-            );
+            elements = unwrap(capacity * 2);
             begin = 0;
-            elements = newElements;
         }
+    }
+
+    private static Object[] unwrap(int newSize) {
+        Object[] unwrapped = Arrays.copyOfRange(elements, begin, newSize + begin);
+        System.arraycopy(
+            elements, 0,
+            unwrapped, elements.length - begin, size - elements.length + begin
+        );
+        return unwrapped;
     }
 
     public static Object element() {

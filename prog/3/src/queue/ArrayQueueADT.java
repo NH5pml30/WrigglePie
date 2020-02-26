@@ -15,16 +15,19 @@ public class ArrayQueueADT {
 
     private static void ensureCapacity(ArrayQueueADT queue, int capacity) {
         if (capacity > queue.elements.length) {
-            Object[] newElements = Arrays.copyOfRange(
-                    queue.elements, queue.begin, queue.elements.length * 2
-            );
-            System.arraycopy(
-                    queue.elements, 0,
-                    newElements, queue.elements.length - queue.begin, queue.size
-            );
+            queue.elements = unwrap(queue, capacity * 2);
             queue.begin = 0;
-            queue.elements = newElements;
         }
+    }
+
+    private static Object[] unwrap(ArrayQueueADT queue, int newSize) {
+        Object[] unwrapped = Arrays.copyOfRange(queue.elements, queue.begin, newSize + queue.begin);
+        System.arraycopy(
+            queue.elements, 0,
+            unwrapped, queue.elements.length - queue.begin,
+            queue.size - queue.elements.length + queue.begin
+        );
+        return unwrapped;
     }
 
     public static Object element(ArrayQueueADT queue) {
