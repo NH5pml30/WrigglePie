@@ -70,7 +70,7 @@ public final class BinarySearch {
         }
     }
 
-    // pre: none
+    // pre:
     // post:
     // (if any) f(y < r) == false && (if any) f(y >= r) == true &&
     // arr.length >= r >= 0
