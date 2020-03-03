@@ -6,4 +6,12 @@ public interface Collection {
     // pre: none
     // post: n = 0
     void clear();
+
+    // pre: none
+    // post: r = n && immutable
+    int size();
+
+    // pre: none
+    // post: r = (n == 0) && immutable
+    boolean isEmpty();
 }

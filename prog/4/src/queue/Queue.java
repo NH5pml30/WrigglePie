@@ -5,7 +5,7 @@ public interface Queue extends Collection {
     // n from Collection &&
     // for all i = 1..n a[i] != null
 
-    // immutable <=> n = n' && for all i=1..n : a[i]' = a[i]
+    // Collection immutable <=> n = n' && for all i=1..n : a[i]' = a[i]
 
     // pre: element != null
     // post:
@@ -22,12 +22,4 @@ public interface Queue extends Collection {
     // post:
     // r = a[1]' && n = n' - 1 && for all i=1..n : a[i+1]' = a[i]
     Object dequeue();
-
-    // pre: none
-    // post: r = n && immutable
-    int size();
-
-    // pre: none
-    // post: r = (n == 0) && immutable
-    boolean isEmpty();
 }
