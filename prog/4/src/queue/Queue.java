@@ -1,5 +1,8 @@
 package queue;
 
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 public interface Queue extends Collection {
     // inv:
     // n from Collection &&
@@ -22,4 +25,15 @@ public interface Queue extends Collection {
     // post:
     // r = a[1]' && n = n' - 1 && for all i=1..n : a[i+1]' = a[i]
     Object dequeue();
+
+    // pre: predicate != null
+    // post:
+    // r.n == n && r.a[i] == predicate(a[i])
+    Queue filter(Predicate<Object> predicate);
+
+    // pre: function != null, function(a[i]) != null
+    // post:
+    // r.n == n && r.a[i] == function(a[i])
+    Queue map(Function<Object, Object> function);
 }
+

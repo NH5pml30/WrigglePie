@@ -1,12 +1,15 @@
 package queue;
 
+import java.util.Arrays;
+import java.util.function.Consumer;
+
 public class LinkedQueue extends AbstractQueue {
-    private Node head, tail;
+    private Node head = null, tail = null;
 
     @Override
     public void enqueueImpl(Object element) {
         tail = new Node(element, tail);
-        if (isEmpty()) {
+        if (size == 0) {
             head = tail;
         }
     }
@@ -19,7 +22,7 @@ public class LinkedQueue extends AbstractQueue {
     @Override
     protected void remove() {
         head = head.next;
-        if (isEmpty()) {
+        if (size == 0) {
             tail = null;
         }
     }
@@ -29,9 +32,23 @@ public class LinkedQueue extends AbstractQueue {
         tail = head = null;
     }
 
+    @Override
+    protected Queue factory() {
+        return new LinkedQueue();
+    }
+
+    @Override
+    protected void traverse(Consumer<Object> action) {
+        Node node = head;
+        for (int i = 0; i < size; i++) {
+            action.accept(node.value);
+            node = node.next;
+        }
+    }
+
     private static class Node {
         private Object value;
-        private Node next;
+        private Node next = null;
 
         public Node(Object value, Node prev) {
             assert value != null;

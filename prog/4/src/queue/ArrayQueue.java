@@ -1,6 +1,7 @@
 package queue;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 public class ArrayQueue extends AbstractQueue {
     private int begin = 0;
@@ -41,8 +42,8 @@ public class ArrayQueue extends AbstractQueue {
     private Object[] unwrap(int newSize) {
         Object[] unwrapped = Arrays.copyOfRange(elements, begin, newSize + begin);
         System.arraycopy(
-            elements, 0,
-            unwrapped, elements.length - begin, size - elements.length + begin
+                elements, 0,
+                unwrapped, elements.length - begin, size - elements.length + begin
         );
         return unwrapped;
     }
@@ -61,5 +62,17 @@ public class ArrayQueue extends AbstractQueue {
     @Override
     public void clearImpl() {
         Arrays.fill(elements, null);
+    }
+
+    @Override
+    protected Queue factory() {
+        return new ArrayQueue();
+    }
+
+    @Override
+    protected void traverse(Consumer<Object> action) {
+        for (int i = 0; i < size; i++) {
+            action.accept(get(i));
+        }
     }
 }

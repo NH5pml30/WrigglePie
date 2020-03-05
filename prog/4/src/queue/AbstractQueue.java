@@ -1,4 +1,8 @@
 package queue;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public abstract class AbstractQueue implements Queue {
     protected int size;
@@ -48,4 +52,45 @@ public abstract class AbstractQueue implements Queue {
     }
 
     protected abstract void clearImpl();
+
+    protected abstract Queue factory();
+
+    private Queue filerMap(Function<Object, Object> function) {
+        Queue res = factory();
+        traverse((Object value) -> {
+            Object x = function.apply(value);
+            if (x != null) {
+                res.enqueue(x);
+            }
+        });
+        return res;
+    }
+
+    @Override
+    public Queue filter(Predicate<Object> predicate) {
+        /*
+        Queue res = factory();
+        traverse((Object value) -> {
+            if (predicate.test(value)) {
+                res.enqueue(value);
+            }
+        });
+        return res;
+         */
+        return filerMap(x -> predicate.test(x) ? x : null);
+    }
+
+    @Override
+    public Queue map(Function<Object, Object> function) {
+        /*
+        Queue res = factory();
+        traverse((Object value) -> {
+            res.enqueue(function.apply(value));
+        });
+        return res;
+        */
+        return filerMap(function);
+    }
+
+    protected abstract void traverse(Consumer<Object> action);
 }
