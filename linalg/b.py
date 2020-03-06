@@ -11,7 +11,7 @@ print('got:\n')
 print(a)
 
 print('characteristic poly: ')
-print(a.charpoly().as_expr())
+print(a.charpoly().factor())
 print('\n')
 
 n = a.rows
@@ -43,12 +43,14 @@ for i in range(n):
   for i in range(matr.cols):
     poly += t ** i * -x[i]
   print(poly)
+  print(poly.factor())
   min_poly = sympy.lcm(min_poly, poly)
   print()
 
 print()
 print('minimal poly: ')
 print(min_poly)
+print(min_poly.factor())
 
 roots = sympy.polys.polyroots.roots(min_poly)
 print(roots)
@@ -105,16 +107,21 @@ coefs = min_poly.all_coeffs()
 res = scipy.signal.residue([1], coefs)
 print(res)
 
-one = sympy.zeros(n, n);
+oneM = sympy.zeros(n, n);
+one = sympy.Poly(1, t)
 for l in list:
   print('input f_' + str(l[0]) + ':', end = ' ')
   lll = input().split(',')
   lll = [sympy.simplify(i) for i in lll]
   coefs = sympy.Matrix(lll)
   f_li = sympy.Poly(coefs, t)
+  print('got: ', end='')
+  print(f_li)
   p_li = (f_li * sympy.div(min_poly, (t - l[0]) ** roots[l[0]])[0]).as_poly()
   print('p_' + str(l[0]) + ': ', end = '')
   print(p_li)
+  print(p_li.all_coeffs())
+  print(p_li.factor())
   # P_li = p_li.eval(a)
   coefs = p_li.all_coeffs()
   coefs.reverse()
@@ -123,8 +130,11 @@ for l in list:
     P_li += a ** i * coefs[i]
   print('P_' + str(l[0]) + ': ', end = '')
   print(P_li)
-  one += P_li
+  print(P_li.columnspace())
+  oneM += P_li
+  one += p_li
 print(one)
+print(oneM)
 
 #if (sum == dims):
 #  print('ops')
