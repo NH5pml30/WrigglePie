@@ -5,6 +5,53 @@ from numpy import linalg as LA
 from sympy.solvers.solveset import linsolve
 from sympy.interactive.printing import init_printing
 init_printing(use_unicode=True)
+t = sympy.symbols("t")
+
+def poly_decompose(phi: sympy.Poly):
+  roots = sympy.polys.polyroots.roots(phi)
+  poly = sympy.Poly(0, t)
+  roots_sym = []
+  j = 0
+  for root, pow in roots.items():
+    for i in range(1, pow + 1):
+      mult = sympy.div(phi, (t - root) ** i)[0]
+      symbol = sympy.symbols('x' + str(j))
+      j += 1
+      roots_sym.append(symbol)
+      poly += mult * symbol
+
+  coeffs = poly.all_coeffs()
+  matr_list = []
+  i = 0
+  j = 0
+  for coef in coeffs:
+    matr_row_list = []
+    for symbol in roots_sym:
+      all_coeffs = coef.as_poly(symbol).all_coeffs()
+      if (len(all_coeffs) == 2):
+        matr_row_list.append(all_coeffs[0])
+      else:
+        matr_row_list.append(0)
+    matr_list.append(matr_row_list)
+  matr = sympy.Matrix(matr_list)
+
+  b = sympy.zeros(matr.rows, 1)
+  b[-1] = 1
+  set = linsolve((matr, b))
+
+  assert len(set.args) == 1
+  ans = set.args[0]
+
+  j = 0
+  res = dict()
+  for root, pow in roots.items():
+    poly = sympy.Poly(0, t)
+    for i in range(1, pow + 1):
+      poly += ans[j] * ((t - root) ** (pow - i))
+      j += 1
+    res[root] = poly
+  return res
+
 
 a = sympy.Matrix(numpy.matrix(input()))
 print('got:\n')
@@ -15,7 +62,6 @@ print(a.charpoly().factor())
 print('\n')
 
 n = a.rows
-t = sympy.symbols("t")
 
 # print(sympy.Poly())
 
@@ -103,25 +149,26 @@ for l in list:
   pp -= fli * sympy.div(min_poly, (t - l[0]) ** roots[l[0]])[0]
   i += 1
 
-coefs = min_poly.all_coeffs()
-res = scipy.signal.residue([1], coefs)
-print(res)
-
 oneM = sympy.zeros(n, n);
 one = sympy.Poly(1, t)
+f = poly_decompose(min_poly)
 for l in list:
-  print('input f_' + str(l[0]) + ':', end = ' ')
-  lll = input().split(',')
-  lll = [sympy.simplify(i) for i in lll]
-  coefs = sympy.Matrix(lll)
-  f_li = sympy.Poly(coefs, t)
-  print('got: ', end='')
+  #print('input f_' + str(l[0]) + ':', end = ' ')
+  #lll = input().split(',')
+  #lll = [sympy.simplify(i) for i in lll]
+  #coefs = sympy.Matrix(lll)
+  #f_li = sympy.Poly(coefs, t)
+  f_li = f[l[0]]
+  print('got f_' + str(l[0]) + ': ', end='')
   print(f_li)
   p_li = (f_li * sympy.div(min_poly, (t - l[0]) ** roots[l[0]])[0]).as_poly()
   print('p_' + str(l[0]) + ': ', end = '')
   print(p_li)
   print(p_li.all_coeffs())
-  print(p_li.factor())
+  try:
+    print(p_li.factor())
+  except:
+    print('No factors')
   # P_li = p_li.eval(a)
   coefs = p_li.all_coeffs()
   coefs.reverse()
