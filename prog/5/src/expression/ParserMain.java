@@ -1,12 +1,11 @@
 package expression;
 
-import expression.exception.EvaluationException;
+import expression.operation.exception.EvaluationException;
 import expression.operation.OperableBigIntTable;
 import expression.operation.OperableDoubleTable;
 import expression.operation.OperableIntTable;
-import expression.operation.OperableTable;
 import expression.parser.ExpressionParser;
-import expression.parser.ParserException;
+import expression.parser.exception.ParserException;
 
 import java.math.BigInteger;
 import java.util.Scanner;

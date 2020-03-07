@@ -1,8 +1,8 @@
 package expression.operation;
 
-import expression.exception.LogException;
-import expression.exception.PowException;
-import expression.exception.ZeroDivisionException;
+import expression.operation.exception.LogException;
+import expression.operation.exception.PowException;
+import expression.operation.exception.ZeroDivisionException;
 
 import java.math.BigInteger;
 

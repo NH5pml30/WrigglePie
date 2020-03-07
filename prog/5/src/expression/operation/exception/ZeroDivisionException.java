@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class ZeroDivisionException extends BinaryOperationException {
     public ZeroDivisionException(Number left) {

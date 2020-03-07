@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public abstract class EvaluationException extends RuntimeException {
     private String expr = "";

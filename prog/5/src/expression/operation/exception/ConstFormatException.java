@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class ConstFormatException extends EvaluationException {
     public ConstFormatException(String type, String strVal) {

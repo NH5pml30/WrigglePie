@@ -1,6 +1,6 @@
 package expression.operation;
 
-import expression.exception.*;
+import expression.operation.exception.*;
 
 public final class OperableIntTable implements OperableTable<OperableIntTable, Integer> {
     private static final OperableIntTable instance = new OperableIntTable();

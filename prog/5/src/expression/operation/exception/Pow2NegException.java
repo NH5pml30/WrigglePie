@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class Pow2NegException extends UnaryOperationException {
     public Pow2NegException(Number val) {

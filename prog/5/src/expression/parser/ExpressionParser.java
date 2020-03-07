@@ -5,6 +5,7 @@ import expression.Const;
 import expression.Variable;
 import expression.operation.*;
 import expression.parser.ExpressionSource.TokenType;
+import expression.parser.exception.ParserException;
 
 import java.util.Map;
 import java.util.Set;

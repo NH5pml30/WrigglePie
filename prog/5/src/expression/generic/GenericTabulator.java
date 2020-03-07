@@ -1,15 +1,13 @@
 package expression.generic;
 
 import expression.CommonExpression;
-import expression.exception.EvaluationException;
+import expression.operation.exception.EvaluationException;
 import expression.operation.OperableBigIntTable;
 import expression.operation.OperableDoubleTable;
 import expression.operation.OperableIntTable;
 import expression.parser.ExpressionParser;
 
 import java.math.BigInteger;
-import java.util.Set;
-import java.util.function.Function;
 
 public class GenericTabulator implements Tabulator {
     interface Evaluator {

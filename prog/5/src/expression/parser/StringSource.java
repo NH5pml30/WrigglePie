@@ -2,6 +2,10 @@ package expression.parser;
 
 import expression.operation.BinaryOperationTableEntry;
 import expression.operation.UnaryOperationTableEntry;
+import expression.parser.exception.ParserException;
+import expression.parser.exception.ParserExceptionCreator;
+import expression.parser.exception.UnexpectedTokenException;
+import expression.parser.exception.UnrecognizedTokenException;
 
 import java.util.Set;
 import java.util.function.Function;
@@ -160,7 +164,10 @@ public class StringSource extends ExpressionSource {
                 default:
                     String name = read(this::isStartName, this::isPartName, x -> true);
                     if (name.isEmpty()) {
-                        throw error("unsupported token part: '" + data.charAt(pos) + "'");
+                        throw error(
+                            UnrecognizedTokenException::new,
+                            "unsupported token part: '" + data.charAt(pos) + "'"
+                        );
                     }
                     switch (name) {
                         case "log2":
@@ -171,20 +178,14 @@ public class StringSource extends ExpressionSource {
                             break;
                         default:
                             if (varNames != null && !varNames.contains(name)) {
-                                throw error("variable/function name '" + name + "' not supported!");
+                                throw error(
+                                    UnrecognizedTokenException::new,
+                                    "variable/function name '" + name + "' not supported!"
+                                );
                             }
                             cacheName(name);
                     }
             }
-        }
-    }
-
-    private void expectNext(char ch) throws ParserException {
-        if (pos + 1 >= data.length()) {
-            throw error("expected '" + ch + "' , got end of expression");
-        }
-        if (data.charAt(pos + 1) != ch) {
-            throw error("expected '" + ch + "' , got '" + data.charAt(pos + 1) + "'");
         }
     }
 
@@ -198,7 +199,7 @@ public class StringSource extends ExpressionSource {
 
     private void testState(State expected, String got) throws ParserException {
         if (state != expected) {
-            String message = "expected ";
+            String message = got + ", expected ";
 
             switch (state) {
                 case PRE:
@@ -208,8 +209,7 @@ public class StringSource extends ExpressionSource {
                     message += "')', binary operation or end of expression";
                     break;
             }
-            message += ", got " + got;
-            throw error(message);
+            throw error(UnexpectedTokenException::new, message);
         }
     }
 
@@ -222,9 +222,9 @@ public class StringSource extends ExpressionSource {
     }
 
     @Override
-    public ParserException error(final String message) {
-        return new ParserException(
-            pos + " (" + getContext(5) + "): " + message
+    public ParserException error(ParserExceptionCreator factory, final String message) {
+        return factory.create(
+            pos, getContext(5), message
         );
     }
 }

@@ -1,7 +1,7 @@
 package expression.operation;
 
 import expression.CommonExpression;
-import expression.exception.EvaluationException;
+import expression.operation.exception.EvaluationException;
 
 import java.util.Map;
 

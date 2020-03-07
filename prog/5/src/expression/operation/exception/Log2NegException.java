@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class Log2NegException extends UnaryOperationException {
     public Log2NegException(Number val) {

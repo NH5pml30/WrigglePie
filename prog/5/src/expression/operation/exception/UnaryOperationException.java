@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class UnaryOperationException extends EvaluationException {
     private Number val;

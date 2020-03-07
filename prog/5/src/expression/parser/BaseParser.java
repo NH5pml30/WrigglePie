@@ -2,6 +2,9 @@ package expression.parser;
 
 import expression.parser.ExpressionSource.TokenData;
 import expression.parser.ExpressionSource.TokenType;
+import expression.parser.exception.ParserException;
+import expression.parser.exception.ParserExceptionCreator;
+import expression.parser.exception.UnexpectedTokenException;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
@@ -36,7 +39,7 @@ public class BaseParser {
 
     protected void expectNoShift(TokenType c) throws ParserException {
         if (token != c) {
-            throw error("Expected '" + c.represent + "', found '" + token.represent + "'");
+            throw error(UnexpectedTokenException::new, "Expected '" + c.represent + "', found '" + token.represent + "'");
         }
     }
 
@@ -45,7 +48,7 @@ public class BaseParser {
         nextToken();
     }
 
-    protected ParserException error(final String message) {
-        return source.error(message);
+    protected ParserException error(ParserExceptionCreator creator, final String message) {
+        return source.error(creator, message);
     }
 }

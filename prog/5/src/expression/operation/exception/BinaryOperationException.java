@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class BinaryOperationException extends EvaluationException {
     private Number left, right;

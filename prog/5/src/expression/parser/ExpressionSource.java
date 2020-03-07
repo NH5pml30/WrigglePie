@@ -2,6 +2,8 @@ package expression.parser;
 
 import expression.operation.BinaryOperationTableEntry;
 import expression.operation.UnaryOperationTableEntry;
+import expression.parser.exception.ParserException;
+import expression.parser.exception.ParserExceptionCreator;
 
 /**
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
@@ -52,5 +54,5 @@ public abstract class ExpressionSource {
 
     abstract TokenType next() throws ParserException;
 
-    abstract ParserException error(final String message);
+    abstract ParserException error(ParserExceptionCreator factory, final String message);
 }

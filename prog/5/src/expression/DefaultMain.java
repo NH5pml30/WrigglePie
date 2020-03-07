@@ -1,9 +1,9 @@
 package expression;
 
-import expression.exception.EvaluationException;
+import expression.operation.exception.EvaluationException;
 import expression.operation.OperableIntTable;
 import expression.parser.ExpressionParser;
-import expression.parser.ParserException;
+import expression.parser.exception.ParserException;
 
 public class DefaultMain {
     public static void main(String[] args) {

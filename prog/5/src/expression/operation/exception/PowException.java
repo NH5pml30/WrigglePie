@@ -1,4 +1,4 @@
-package expression.exception;
+package expression.operation.exception;
 
 public class PowException extends BinaryOperationException {
     public PowException(Number left, Number right, String message) {
