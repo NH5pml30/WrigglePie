@@ -22,40 +22,40 @@ public class GenericTest extends BaseTest {
         allConst("10", 10);
         allConst("10 + 4 / 2 - 7", 5);
         all(
-                "x",
-                (x, y, z) -> (long) x,
-                (x, y, z) -> (double) x,
-                (x, y, z) -> bi(x)
+            "x",
+            (x, y, z) -> (long)x,
+            (x, y, z) -> (double)x,
+            (x, y, z) -> bi(x)
         );
         all(
-                "y + 2",
-                (x, y, z) -> y + 2L,
-                (x, y, z) -> y + 2.0,
-                (x, y, z) -> bi(y).add(bi(2))
+            "y + 2",
+            (x, y, z) -> y + 2L,
+            (x, y, z) -> y + 2.0,
+            (x, y, z) -> bi(y).add(bi(2))
         );
         all(
-                "z / 2",
-                (x, y, z) -> z / 2L,
-                (x, y, z) -> z / 2.0,
-                (x, y, z) -> bi(z / 2)
+            "z / 2",
+            (x, y, z) -> z / 2L,
+            (x, y, z) -> z / 2.0,
+            (x, y, z) -> bi(z / 2)
         );
         all(
-                "y / z",
-                (x, y, z) -> y / (long) z,
-                (x, y, z) -> y / (double) z,
-                (x, y, z) -> bi(y / z)
+            "y / z",
+            (x, y, z) -> y / (long)z,
+            (x, y, z) -> y / (double)z,
+            (x, y, z) -> bi(y / z)
         );
         all(
-                "10000000 * x * y * 10000000 + z",
-                (x, y, z) -> mul(mul(mul(10000000, x), y), 10000000) + z,
-                (x, y, z) -> 10000000.0 * x * y * 10000000.0 + z,
-                (x, y, z) -> bi(10000000).multiply(bi(x)).multiply(bi(y)).multiply(bi(10000000)).add(bi(z))
+            "10000000 * x * y * 10000000 + z",
+            (x, y, z) -> mul(mul(mul(10000000, x), y), 10000000) + z,
+            (x, y, z) -> 10000000.0 * x * y * 10000000.0 + z,
+            (x, y, z) -> bi(10000000).multiply(bi(x)).multiply(bi(y)).multiply(bi(10000000)).add(bi(z))
         );
         all(
-                "x * y + (z - 1) / 10",
-                (x, y, z) -> mul(x, y) + check(z - 1) / 10L,
-                (x, y, z) -> x * (double) y + (z - 1.0) / 10,
-                (x, y, z) -> bi(x).multiply(bi(y)).add(bi(z).subtract(BigInteger.ONE).divide(BigInteger.TEN))
+            "x * y + (z - 1) / 10",
+            (x, y, z) -> mul(x, y) + check(z - 1) / 10L,
+            (x, y, z) -> x * (double)y + (z - 1.0) / 10,
+            (x, y, z) -> bi(x).multiply(bi(y)).add(bi(z).subtract(BigInteger.ONE).divide(BigInteger.TEN))
         );
     }
 
@@ -64,7 +64,7 @@ public class GenericTest extends BaseTest {
     }
 
     protected static long check(final long v) {
-        if (v != (int) v) {
+        if (v != (int)v) {
             throw new RuntimeException("Overflow");
         }
         return v;
@@ -75,18 +75,18 @@ public class GenericTest extends BaseTest {
     }
 
     protected static Integer i(final long x) {
-        return Integer.MIN_VALUE <= x && x <= Integer.MAX_VALUE ? (int) x : null;
+        return Integer.MIN_VALUE <= x && x <= Integer.MAX_VALUE ? (int)x : null;
     }
 
     protected void all(final String expression, final F<Long> fi, final F<Double> fd, final F<BigInteger> fbi) {
-        test(expression, "i", (x, y, z) -> (int) check(fi.apply(x, y, z)));
+        test(expression, "i", (x, y, z) -> (int)check(fi.apply(x, y, z)));
         test(expression, "d", fd);
         test(expression, "bi", fbi);
     }
 
     protected void allConst(final String expression, final Integer v) {
         final BigInteger bi = bi(v);
-        all(expression, (x, y, z) -> (long) v, (x, y, z) -> (double) v, (x, y, z) -> bi);
+        all(expression, (x, y, z) -> (long)v, (x, y, z) -> (double)v, (x, y, z) -> bi);
     }
 
     protected void test(final String expression, final String name, final F<?> f) {
@@ -98,22 +98,22 @@ public class GenericTest extends BaseTest {
         for (final Op<F<?>> test : tests) {
             final String[] parts = test.name.split(": ");
             test(
-                    parts[0], parts[1], test.f,
-                    -randomInt(SIZE), randomInt(SIZE),
-                    -randomInt(SIZE), randomInt(SIZE),
-                    -randomInt(SIZE), randomInt(SIZE)
+                parts[0], parts[1], test.f,
+                -randomInt(SIZE), randomInt(SIZE),
+                -randomInt(SIZE), randomInt(SIZE),
+                -randomInt(SIZE), randomInt(SIZE)
             );
             test(
-                    parts[0], parts[1], test.f,
-                    MAX - randomInt(SIZE), MAX,
-                    MAX - randomInt(SIZE), MAX,
-                    MAX - randomInt(SIZE), MAX
+                parts[0], parts[1], test.f,
+                MAX - randomInt(SIZE), MAX,
+                MAX - randomInt(SIZE), MAX,
+                MAX - randomInt(SIZE), MAX
             );
             test(
-                    parts[0], parts[1], test.f,
-                    MIN, MIN + randomInt(SIZE),
-                    MIN, MIN + randomInt(SIZE),
-                    MIN, MIN + randomInt(SIZE)
+                parts[0], parts[1], test.f,
+                MIN, MIN + randomInt(SIZE),
+                MIN, MIN + randomInt(SIZE),
+                MIN, MIN + randomInt(SIZE)
             );
         }
     }
@@ -138,11 +138,11 @@ public class GenericTest extends BaseTest {
                     }
                     final Object actual = result[x - x1][y - y1][z - z1];
                     assert Objects.equals(expected, actual) :
-                            String.format("table[%d][%d][%d](x=%d, y=%d, z=%d]) = %s (expected %s)",
-                                    x - x1, y - y1, z - z1,
-                                    x, y, z,
-                                    actual, expected
-                            );
+                        String.format("table[%d][%d][%d](x=%d, y=%d, z=%d]) = %s (expected %s)",
+                            x - x1, y - y1, z - z1,
+                            x, y, z,
+                            actual, expected
+                        );
                     counter.passed();
                 }
             }

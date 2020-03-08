@@ -1,7 +1,7 @@
 package expression;
 
-import expression.operation.exception.EvaluationException;
 import expression.operation.OperableIntTable;
+import expression.operation.exception.EvaluationException;
 import expression.parser.ExpressionParser;
 import expression.parser.exception.ParserException;
 

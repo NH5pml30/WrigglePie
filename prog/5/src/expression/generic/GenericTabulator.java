@@ -2,9 +2,6 @@ package expression.generic;
 
 import expression.CommonExpression;
 import expression.operation.exception.EvaluationException;
-import expression.operation.OperableBigIntTable;
-import expression.operation.OperableDoubleTable;
-import expression.operation.OperableIntTable;
 import expression.parser.ExpressionParser;
 
 import java.math.BigInteger;
@@ -20,20 +17,18 @@ public class GenericTabulator implements Tabulator {
         Evaluator count;
         switch (mode) {
             case "i":
-                count = (x, y, z) ->
-                     expr.evaluate(OperableIntTable.getInstance(), x, y, z);
+                count = expr::evaluate;
                 break;
             case "d":
                 count = (x, y, z) ->
-                     expr.evaluate(OperableDoubleTable.getInstance(), (double)x, (double)y, (double)z);
+                            expr.evaluate((double)x, (double)y, (double)z);
                 break;
             case "bi":
                 count = (x, y, z) ->
-                            expr.evaluate(OperableBigIntTable.getInstance(),
-                                BigInteger.valueOf(x), BigInteger.valueOf(y), BigInteger.valueOf(z));
+                            expr.evaluate(BigInteger.valueOf(x), BigInteger.valueOf(y), BigInteger.valueOf(z));
                 break;
             default:
-                throw new Exception("Unknown mode: " + mode);
+                throw new IllegalArgumentException("Unknown mode: " + mode);
         }
         Object[][][] res = new Object[x2 - x1 + 1][y2 - y1 + 1][z2 - z1 + 1];
         for (int i = 0; i <= x2 - x1; i++) {

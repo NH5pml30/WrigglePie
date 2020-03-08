@@ -55,6 +55,7 @@ public class ExpressionParser implements Parser {
         return parse(new StringSource(source, Set.of("x", "y", "z")), outVarNames);
     }
 
+    @Override
     public CommonExpression parse(final String source)
         throws ParserException {
         return parse(new StringSource(source, Set.of("x", "y", "z")), null);

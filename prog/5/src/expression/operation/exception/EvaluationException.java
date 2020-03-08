@@ -8,7 +8,8 @@ public abstract class EvaluationException extends RuntimeException {
         super(message);
     }
 
-    public void setOp(String op) {}
+    public void setOp(String op) {
+    }
 
     public void addExpr(String expr) {
         this.expr += expr;

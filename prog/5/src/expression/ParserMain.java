@@ -1,9 +1,6 @@
 package expression;
 
 import expression.operation.exception.EvaluationException;
-import expression.operation.OperableBigIntTable;
-import expression.operation.OperableDoubleTable;
-import expression.operation.OperableIntTable;
 import expression.parser.ExpressionParser;
 import expression.parser.exception.ParserException;
 
@@ -57,14 +54,14 @@ public class ParserMain {
                         xi = outNames.contains("x") ? getInt(scanner, "Input x: ") : 0,
                         yi = outNames.contains("y") ? getInt(scanner, "Input y: ") : 0,
                         zi = outNames.contains("z") ? getInt(scanner, "Input z: ") : 0;
-                    System.out.println(expr.evaluate(OperableIntTable.getInstance(), xi, yi, zi));
+                    System.out.println(expr.evaluate(xi, yi, zi));
                     break;
                 case "-d":
                     double
                         xd = outNames.contains("x") ? getDouble(scanner, "Input x: ") : 0,
                         yd = outNames.contains("y") ? getDouble(scanner, "Input y: ") : 0,
                         zd = outNames.contains("z") ? getDouble(scanner, "Input z: ") : 0;
-                    System.out.println(expr.evaluate(OperableDoubleTable.getInstance(), xd, yd, zd));
+                    System.out.println(expr.evaluate(xd, yd, zd));
                     break;
                 case "-bi":
                     BigInteger
@@ -74,7 +71,7 @@ public class ParserMain {
                                   BigInteger.valueOf(getInt(scanner, "Input y: ")) : BigInteger.ZERO,
                         zbi = outNames.contains("z") ?
                                   BigInteger.valueOf(getInt(scanner, "Input z: ")) : BigInteger.ZERO;
-                    System.out.println(expr.evaluate(OperableBigIntTable.getInstance(), xbi, ybi, zbi));
+                    System.out.println(expr.evaluate(xbi, ybi, zbi));
                     break;
             }
         } catch (ParserException e) {
