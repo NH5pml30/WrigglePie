@@ -16,11 +16,9 @@ public interface OperableTable<
 
     EvalT negate(EvalT x);
 
-    EvalT log(EvalT base, EvalT x);
+    EvalT min(EvalT left, EvalT right);
 
-    EvalT log2(EvalT x);
+    EvalT max(EvalT left, EvalT right);
 
-    EvalT pow(EvalT base, EvalT exp);
-
-    EvalT pow2(EvalT x);
+    EvalT count(EvalT x);
 }
