@@ -148,18 +148,10 @@ public class StringSource extends ExpressionSource {
                     }
                     break;
                 case '*':
-                    if (pos + 1 < data.length() && data.charAt(pos + 1) == '*') {
-                        cacheBinaryOp(BinaryOperationTableEntry.POW);
-                    } else {
-                        cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
-                    }
+                    cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
                     break;
                 case '/':
-                    if (pos + 1 < data.length() && data.charAt(pos + 1) == '/') {
-                        cacheBinaryOp(BinaryOperationTableEntry.LOG);
-                    } else {
-                        cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
-                    }
+                    cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
                     break;
                 default:
                     String name = read(this::isStartName, this::isPartName, x -> true);
@@ -170,11 +162,14 @@ public class StringSource extends ExpressionSource {
                         );
                     }
                     switch (name) {
-                        case "log2":
-                            cacheUnaryOp(UnaryOperationTableEntry.LOG2);
+                        case "min":
+                            cacheBinaryOp(BinaryOperationTableEntry.MIN);
                             break;
-                        case "pow2":
-                            cacheUnaryOp(UnaryOperationTableEntry.POW2);
+                        case "max":
+                            cacheBinaryOp(BinaryOperationTableEntry.MAX);
+                            break;
+                        case "count":
+                            cacheUnaryOp(UnaryOperationTableEntry.COUNT);
                             break;
                         default:
                             if (varNames != null && !varNames.contains(name)) {

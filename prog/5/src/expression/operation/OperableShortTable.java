@@ -1,5 +1,7 @@
 package expression.operation;
 
+import expression.operation.exception.ZeroDivisionException;
+
 public final class OperableShortTable implements OperableTable<OperableShortTable, Short> {
     private static final OperableShortTable instance = new OperableShortTable();
 
@@ -24,6 +26,9 @@ public final class OperableShortTable implements OperableTable<OperableShortTabl
 
     @Override
     public Short divide(Short left, Short right) {
+        if (right == 0) {
+            throw new ZeroDivisionException(left);
+        }
         return (short)(left / right);
     }
 

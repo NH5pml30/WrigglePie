@@ -26,6 +26,9 @@ public final class OperableUncheckedIntTable implements OperableTable<OperableUn
 
     @Override
     public Integer divide(Integer left, Integer right) {
+        if (right == 0) {
+            throw new ZeroDivisionException(left);
+        }
         return left / right;
     }
 

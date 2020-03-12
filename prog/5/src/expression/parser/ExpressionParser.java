@@ -32,14 +32,13 @@ public class ExpressionParser implements Parser {
         Subtract.entry, Subtract::new,
         Divide.entry, Divide::new,
         Multiply.entry, Multiply::new,
-        Pow.entry, Pow::new,
-        Log.entry, Log::new
+        Min.entry, Min::new,
+        Max.entry, Max::new
     );
     private static final Map<UnaryOperationTableEntry, UnExprFactory>
         unFactories = Map.of(
         Negate.entry, Negate::new,
-        Log2.entry, Log2::new,
-        Pow2.entry, Pow2::new
+        Count.entry, Count::new
     );
 
     public ExpressionParser() {

@@ -1,9 +1,6 @@
 package expression;
 
-import expression.operation.OperableBigIntTable;
-import expression.operation.OperableDoubleTable;
-import expression.operation.OperableIntTable;
-import expression.operation.OperableTable;
+import expression.operation.*;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -16,6 +13,14 @@ public interface CommonExpression extends BaseExpression, TripleExpression {
 
     default int evaluate(int x, int y, int z) {
         return evaluate(OperableIntTable.getInstance(), Map.of("x", x, "y", y, "z", z));
+    }
+
+    default short evaluate(short x, short y, short z) {
+        return evaluate(OperableShortTable.getInstance(), Map.of("x", x, "y", y, "z", z));
+    }
+
+    default long evaluate(long x, long y, long z) {
+        return evaluate(OperableLongTable.getInstance(), Map.of("x", x, "y", y, "z", z));
     }
 
     default double evaluate(double x, double y, double z) {

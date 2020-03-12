@@ -1,5 +1,7 @@
 package expression.operation;
 
+import expression.operation.exception.ZeroDivisionException;
+
 public final class OperableLongTable implements OperableTable<OperableLongTable, Long> {
     private static final OperableLongTable instance = new OperableLongTable();
 
@@ -24,6 +26,9 @@ public final class OperableLongTable implements OperableTable<OperableLongTable,
 
     @Override
     public Long divide(Long left, Long right) {
+        if (right == 0) {
+            throw new ZeroDivisionException(left);
+        }
         return left / right;
     }
 

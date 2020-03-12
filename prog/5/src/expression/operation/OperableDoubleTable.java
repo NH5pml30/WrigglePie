@@ -49,6 +49,6 @@ public final class OperableDoubleTable implements OperableTable<OperableDoubleTa
 
     @Override
     public Double count(Double x) {
-        return null;
+        return (double)Long.bitCount(Double.doubleToLongBits(x));
     }
 }
