@@ -47,50 +47,17 @@ public final class OperableBigIntTable implements OperableTable<OperableBigIntTa
     }
 
     @Override
-    public BigInteger pow(BigInteger base, BigInteger exp) {
-        if (exp.compareTo(BigInteger.ZERO) < 0) {
-            throw new PowException(base, exp, "negative exponent (makes no sense in integers)");
-        } else if (base.compareTo(BigInteger.ZERO) == 0 && exp.compareTo(BigInteger.ZERO) == 0) {
-            throw new PowException(base, exp, "zero to the power zero (undefined)");
-        }
-
-        BigInteger x = base, n = exp;
-        BigInteger r = BigInteger.ONE;
-        while (n.compareTo(BigInteger.ZERO) != 0) {
-            if (n.mod(BigInteger.TWO).compareTo(BigInteger.ONE) == 0) {
-                r = multiply(r, x);
-            }
-            n = n.divide(BigInteger.TWO);
-            if (n.compareTo(BigInteger.ZERO) != 0) {
-                x = multiply(x, x);
-            }
-        }
-        return r;
+    public BigInteger min(BigInteger left, BigInteger right) {
+        return left.min(right);
     }
 
     @Override
-    public BigInteger log(BigInteger x, BigInteger base) {
-        if (base.compareTo(BigInteger.ONE) <= 0) {
-            throw new LogException(x, base, "base less or equal to 1");
-        } else if (x.compareTo(BigInteger.ZERO) <= 0) {
-            throw new LogException(x, base, "non-positive argument");
-        }
-
-        BigInteger res = BigInteger.ZERO;
-        while (x.compareTo(base) >= 0) {
-            x = divide(x, base);
-            res = res.add(BigInteger.ONE);
-        }
-        return res;
+    public BigInteger max(BigInteger left, BigInteger right) {
+        return left.max(right);
     }
 
     @Override
-    public BigInteger log2(BigInteger x) {
-        return log(x, BigInteger.TWO);
-    }
-
-    @Override
-    public BigInteger pow2(BigInteger x) {
-        return pow(BigInteger.TWO, x);
+    public BigInteger count(BigInteger x) {
+        return BigInteger.valueOf(x.bitCount());
     }
 }

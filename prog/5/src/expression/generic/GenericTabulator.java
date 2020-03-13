@@ -1,6 +1,7 @@
 package expression.generic;
 
 import expression.CommonExpression;
+import expression.operation.OperableUncheckedIntTable;
 import expression.operation.exception.EvaluationException;
 import expression.parser.ExpressionParser;
 
@@ -26,6 +27,18 @@ public class GenericTabulator implements Tabulator {
             case "bi":
                 count = (x, y, z) ->
                             expr.evaluate(BigInteger.valueOf(x), BigInteger.valueOf(y), BigInteger.valueOf(z));
+                break;
+            case "u":
+                count = (x, y, z) ->
+                        expr.evaluate(OperableUncheckedIntTable.getInstance(), x, y, z);
+                break;
+            case "s":
+                count = (x, y, z) ->
+                        expr.evaluate((short)x, (short)y, (short)z);
+                break;
+            case "l":
+                count = (x, y, z) ->
+                        expr.evaluate((long)x, (long)y, (long)z);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown mode: " + mode);

@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{183242d8-92f2-49dd-84c5-196d10589380}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>b.py</StartupFile>
+    <StartupFile>c.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -21,6 +21,7 @@
   <ItemGroup>
     <Compile Include="a.py" />
     <Compile Include="b.py" />
+    <Compile Include="c.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

@@ -7,8 +7,8 @@ public enum BinaryOperationTableEntry implements OperationTableBase {
     SUBTRACT(2, "-", Subtract::new, Subtract::setEntry),
     MULTIPLY(1, "*", Multiply::new, Multiply::setEntry),
     DIVIDE(1, "/", Divide::new, Divide::setEntry),
-    POW(0, "**", Pow::new, Pow::setEntry),
-    LOG(0, "//", Log::new, Log::setEntry);
+    MIN(3, "min", Min::new, Min::setEntry),
+    MAX(3, "max", Max::new, Max::setEntry);
 
     final int priority;
     final String symbol;

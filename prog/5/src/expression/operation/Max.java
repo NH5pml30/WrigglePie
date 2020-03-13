@@ -4,7 +4,7 @@ import expression.CommonExpression;
 
 import java.util.Map;
 
-public class Pow extends BinaryOperation {
+public class Max extends BinaryOperation {
     private static BinaryOperationTableEntry entry;
     public static void setEntry(BinaryOperationTableEntry newEntry) {
         entry = newEntry;
@@ -13,13 +13,13 @@ public class Pow extends BinaryOperation {
         return entry;
     }
 
-    public Pow(CommonExpression left, CommonExpression right) {
+    public Max(CommonExpression left, CommonExpression right) {
         super(entry, left, right);
     }
 
     @Override
     <T extends OperableTable<T, EvalT>, EvalT extends Number> EvalT
     evaluateUnsafe(T table, Map<String, EvalT> x) {
-        return evaluateHelper(table, table::pow, x);
+        return evaluateHelper(table, table::max, x);
     }
 }

@@ -38,22 +38,17 @@ public final class OperableDoubleTable implements OperableTable<OperableDoubleTa
     }
 
     @Override
-    public Double pow(Double base, Double exp) {
-        return Math.pow(base, exp);
+    public Double min(Double left, Double right) {
+        return Double.min(left, right);
     }
 
     @Override
-    public Double log(Double x, Double base) {
-        return Math.log(x) / Math.log(base);
+    public Double max(Double left, Double right) {
+        return Double.max(left, right);
     }
 
     @Override
-    public Double log2(Double x) {
-        return log(x, 2.0);
-    }
-
-    @Override
-    public Double pow2(Double x) {
-        return Math.pow(2, x);
+    public Double count(Double x) {
+        return (double)Long.bitCount(Double.doubleToLongBits(x));
     }
 }

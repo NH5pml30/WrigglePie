@@ -4,8 +4,7 @@ import java.util.function.Consumer;
 
 public enum UnaryOperationTableEntry implements OperationTableBase {
     UNARY_MINUS(0, "-", Negate::new, Negate::setEntry),
-    LOG2(0, "log2", Log2::new, Log2::setEntry),
-    POW2(0, "pow2", Pow2::new, Pow2::setEntry);
+    COUNT(0, "count", Count::new, Count::setEntry);
 
     final int priority;
     final String symbol;
