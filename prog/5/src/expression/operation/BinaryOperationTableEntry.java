@@ -1,19 +1,24 @@
 package expression.operation;
 
+import java.util.function.Consumer;
+
 public enum BinaryOperationTableEntry implements OperationTableBase {
-    ADD(2, "+"),
-    SUBTRACT(2, "-"),
-    MULTIPLY(1, "*"),
-    DIVIDE(1, "/"),
-    POW(0, "**"),
-    LOG(0, "//");
+    ADD(2, "+", Add::new, Add::setEntry),
+    SUBTRACT(2, "-", Subtract::new, Subtract::setEntry),
+    MULTIPLY(1, "*", Multiply::new, Multiply::setEntry),
+    DIVIDE(1, "/", Divide::new, Divide::setEntry),
+    POW(0, "**", Pow::new, Pow::setEntry),
+    LOG(0, "//", Log::new, Log::setEntry);
 
     final int priority;
     final String symbol;
+    final BinaryOperation.Factory factory;
 
-    BinaryOperationTableEntry(int priority, String symbol) {
+    BinaryOperationTableEntry(int priority, String symbol, BinaryOperation.Factory factory, Consumer<BinaryOperationTableEntry> setter) {
+        setter.accept(this);
         this.priority = priority;
         this.symbol = symbol;
+        this.factory = factory;
     }
 
     @Override
@@ -29,5 +34,9 @@ public enum BinaryOperationTableEntry implements OperationTableBase {
     @Override
     public String getSymbol() {
         return symbol;
+    }
+
+    public BinaryOperation.Factory getFactory() {
+        return factory;
     }
 }

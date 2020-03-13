@@ -5,7 +5,13 @@ import expression.CommonExpression;
 import java.util.Map;
 
 public class Subtract extends BinaryOperation {
-    static public final BinaryOperationTableEntry entry = BinaryOperationTableEntry.SUBTRACT;
+    private static BinaryOperationTableEntry entry;
+    public static void setEntry(BinaryOperationTableEntry newEntry) {
+        entry = newEntry;
+    }
+    public static BinaryOperationTableEntry getEntry() {
+        return entry;
+    }
 
     public Subtract(CommonExpression left, CommonExpression right) {
         super(entry, left, right);

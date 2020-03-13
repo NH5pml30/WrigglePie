@@ -9,6 +9,10 @@ public abstract class UnaryOperation extends OperationBase {
     private final UnaryOperationTableEntry entry;
     private final CommonExpression expr;
 
+    public interface Factory {
+        UnaryOperation create(CommonExpression expr);
+    }
+
     UnaryOperation(final UnaryOperationTableEntry entry,
                    final CommonExpression expr) {
         super(entry);

@@ -7,11 +7,14 @@ import java.util.function.BinaryOperator;
 
 public abstract class BinaryOperation
     extends OperationBase {
+    public interface Factory {
+        BinaryOperation create(CommonExpression left, CommonExpression right);
+    }
+
     private final BinaryOperationTableEntry entry;
     protected final CommonExpression left, right;
 
-    BinaryOperation(final BinaryOperationTableEntry entry,
-                    final CommonExpression left, final CommonExpression right) {
+    BinaryOperation(BinaryOperationTableEntry entry, final CommonExpression left, final CommonExpression right) {
         super(entry);
         this.entry = entry;
         this.left = left;

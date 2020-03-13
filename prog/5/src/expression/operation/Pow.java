@@ -5,7 +5,13 @@ import expression.CommonExpression;
 import java.util.Map;
 
 public class Pow extends BinaryOperation {
-    static public final BinaryOperationTableEntry entry = BinaryOperationTableEntry.POW;
+    private static BinaryOperationTableEntry entry;
+    public static void setEntry(BinaryOperationTableEntry newEntry) {
+        entry = newEntry;
+    }
+    public static BinaryOperationTableEntry getEntry() {
+        return entry;
+    }
 
     public Pow(CommonExpression left, CommonExpression right) {
         super(entry, left, right);

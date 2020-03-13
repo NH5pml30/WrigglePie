@@ -15,33 +15,6 @@ import java.util.Set;
  * @author Nikolai Kholiavin
  */
 public class ExpressionParser implements Parser {
-    private interface BiExprFactory {
-        CommonExpression create(
-            CommonExpression left,
-            CommonExpression right
-        );
-    }
-
-    private interface UnExprFactory {
-        CommonExpression create(CommonExpression left);
-    }
-
-    private static final Map<BinaryOperationTableEntry, BiExprFactory>
-        biFactories = Map.of(
-        Add.entry, Add::new,
-        Subtract.entry, Subtract::new,
-        Divide.entry, Divide::new,
-        Multiply.entry, Multiply::new,
-        Pow.entry, Pow::new,
-        Log.entry, Log::new
-    );
-    private static final Map<UnaryOperationTableEntry, UnExprFactory>
-        unFactories = Map.of(
-        Negate.entry, Negate::new,
-        Log2.entry, Log2::new,
-        Pow2.entry, Pow2::new
-    );
-
     public ExpressionParser() {
     }
 
@@ -91,7 +64,7 @@ public class ExpressionParser implements Parser {
                 left = new Variable(lastData.str);
             } else if (test(TokenType.UNARY_OP)) {
                 UnaryOperationTableEntry op = lastData.uOp;
-                left = unFactories.get(op).create(parseSubexpression(op.getPriority(), outVarNames));
+                left = op.getFactory().create(parseSubexpression(op.getPriority(), outVarNames));
             } else {
                 expect(TokenType.NUMBER);
                 left = new Const(lastData.str);
@@ -109,7 +82,7 @@ public class ExpressionParser implements Parser {
                 } else {
                     nextToken();
                     int prior = op.getPriority();
-                    left = biFactories.get(op).create(left, parseSubexpression(prior, outVarNames));
+                    left = op.getFactory().create(left, parseSubexpression(prior, outVarNames));
                 }
             }
         }

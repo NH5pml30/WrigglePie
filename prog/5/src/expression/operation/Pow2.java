@@ -5,7 +5,13 @@ import expression.CommonExpression;
 import java.util.Map;
 
 public class Pow2 extends UnaryOperation {
-    public static final UnaryOperationTableEntry entry = UnaryOperationTableEntry.POW2;
+    private static UnaryOperationTableEntry entry;
+    public static void setEntry(UnaryOperationTableEntry newEntry) {
+        entry = newEntry;
+    }
+    public static UnaryOperationTableEntry getEntry() {
+        return entry;
+    }
 
     public Pow2(CommonExpression expr) {
         super(entry, expr);
