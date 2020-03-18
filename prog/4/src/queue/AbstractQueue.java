@@ -55,6 +55,12 @@ public abstract class AbstractQueue implements Queue {
 
     protected abstract Queue factory();
 
+    // pre: function != null
+    // pre: predicate != null
+    // post:
+    // r.n == sum(function(a[i]) != null ? 1 : 0) &&
+    // for any i : function(a[i]) != null  exists i' : (r.a[i'] == function(a[i]) &&
+    //   for any j < i : function(a[j]) != null  j' < i')
     private Queue filerMap(Function<Object, Object> function) {
         Queue res = factory();
         traverse((Object value) -> {
@@ -68,27 +74,13 @@ public abstract class AbstractQueue implements Queue {
 
     @Override
     public Queue filter(Predicate<Object> predicate) {
-        /*
-        Queue res = factory();
-        traverse((Object value) -> {
-            if (predicate.test(value)) {
-                res.enqueue(value);
-            }
-        });
-        return res;
-         */
+        assert predicate != null;
         return filerMap(x -> predicate.test(x) ? x : null);
     }
 
     @Override
     public Queue map(Function<Object, Object> function) {
-        /*
-        Queue res = factory();
-        traverse((Object value) -> {
-            res.enqueue(function.apply(value));
-        });
-        return res;
-        */
+        assert function != null;
         return filerMap(function);
     }
 

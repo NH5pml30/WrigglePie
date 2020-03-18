@@ -28,7 +28,9 @@ public interface Queue extends Collection {
 
     // pre: predicate != null
     // post:
-    // r.n == n && r.a[i] == predicate(a[i])
+    // r.n == sum(predicate(a[i])) && for any i predicate(r.a[i]) == true &&
+    // for any i : predicate(a[i]) == true  exists i' : (r.a[i'] == a[i] &&
+    //   for any j < i : predicate(a[j]) == true  j' < i')
     Queue filter(Predicate<Object> predicate);
 
     // pre: function != null, function(a[i]) != null

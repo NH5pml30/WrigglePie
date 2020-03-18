@@ -3,11 +3,13 @@ package expression;
 import expression.operation.exception.EvaluationException;
 import expression.parser.ExpressionParser;
 import expression.parser.exception.ParserException;
+import expression.parser.exception.UnrecognizedTokenException;
 
 import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 public class ParserMain {
     private static int getInt(final Scanner scan, final String message) {
@@ -34,52 +36,72 @@ public class ParserMain {
         return res;
     }
 
+    private static <T> void getNumbers(String[] args, int offset, Function<String, T> parse,
+                                       T[] res, Set<String> names) {
+        for (String name : names) {
+            int ind = name.charAt(0) - 'x';
+            res[ind] = parse.apply(args[ind + offset]);
+        }
+    }
+
     public static void main(String[] args) {
-        if (args.length < 1 || !args[0].equals("-i") && !args[0].equals("-d") && !args[0].equals("-bi")) {
+        if (args.length < 2 || !args[0].equals("-i") && !args[0].equals("-d") && !args[0].equals("-bi")) {
+            System.out.println("Usage: <executable> -mode expression [-x [-y [-z]]]");
             System.out.println("Evaluation modes:\n-i -- int32\n-d -- double\n-bi -- big integer");
             return;
         }
 
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Input expression with variables x, y, z: ");
-        String expression = scanner.nextLine();
+        String expression = args[1];
+        Set<String> names, outNames = new TreeSet<>();
         try {
-            Set<String> names = Set.of("x", "y", "z"), outNames = new TreeSet<>();
+            switch (args.length) {
+                case 5:
+                    names = Set.of("x", "y", "z");
+                    break;
+                case 4:
+                    names = Set.of("x", "y");
+                    break;
+                case 3:
+                    names = Set.of("x");
+                    break;
+                default:
+                    names = Set.of();
+                    break;
+            }
             CommonExpression expr = new ExpressionParser().parse(expression, names, outNames);
             System.out.println("Got: " + expr.toString());
 
             switch (args[0]) {
                 case "-i":
-                    int
-                        xi = outNames.contains("x") ? getInt(scanner, "Input x: ") : 0,
-                        yi = outNames.contains("y") ? getInt(scanner, "Input y: ") : 0,
-                        zi = outNames.contains("z") ? getInt(scanner, "Input z: ") : 0;
-                    System.out.println(expr.evaluate(xi, yi, zi));
+                    Integer[] iVals = new Integer[] {0, 0, 0};
+                    getNumbers(args, 2, Integer::parseInt, iVals, outNames);
+                    System.out.println(expr.evaluate(iVals[0], iVals[1], iVals[2]));
                     break;
                 case "-d":
-                    double
-                        xd = outNames.contains("x") ? getDouble(scanner, "Input x: ") : 0,
-                        yd = outNames.contains("y") ? getDouble(scanner, "Input y: ") : 0,
-                        zd = outNames.contains("z") ? getDouble(scanner, "Input z: ") : 0;
-                    System.out.println(expr.evaluate(xd, yd, zd));
+                    Double[] dVals = new Double[] {0.0, 0.0, 0.0};
+                    getNumbers(args, 2, Double::parseDouble, dVals, outNames);
+                    System.out.println(expr.evaluate(dVals[0], dVals[1], dVals[2]));
                     break;
                 case "-bi":
-                    BigInteger
-                        xbi = outNames.contains("x") ?
-                                  BigInteger.valueOf(getInt(scanner, "Input x: ")) : BigInteger.ZERO,
-                        ybi = outNames.contains("y") ?
-                                  BigInteger.valueOf(getInt(scanner, "Input y: ")) : BigInteger.ZERO,
-                        zbi = outNames.contains("z") ?
-                                  BigInteger.valueOf(getInt(scanner, "Input z: ")) : BigInteger.ZERO;
-                    System.out.println(expr.evaluate(xbi, ybi, zbi));
+                    BigInteger[] biVals = new BigInteger[] {BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO};
+                    getNumbers(args, 2, BigInteger::new, biVals, outNames);
+                    System.out.println(expr.evaluate(biVals[0], biVals[1], biVals[2]));
                     break;
+            }
+        } catch (UnrecognizedTokenException e) {
+            switch (e.getToken()) {
+                case "x":
+                case "y":
+                case "z":
+                    System.out.println("Not enough variable values given! (used at least '" + e.getToken() + "')");
+                    break;
+                default:
+                    System.out.println(e.getMessage());
             }
         } catch (ParserException e) {
             System.out.println(e.getMessage());
         } catch (EvaluationException e) {
             System.out.println(e.getMessage() + ": " + e.getExpr());
         }
-
-        scanner.close();
     }
 }

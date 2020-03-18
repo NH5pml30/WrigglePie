@@ -7,6 +7,8 @@ import expression.parser.exception.ParserExceptionCreator;
 import expression.parser.exception.UnexpectedTokenException;
 import expression.parser.exception.UnrecognizedTokenException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -20,6 +22,22 @@ public class StringSource extends ExpressionSource {
     private TokenType cachedTokenType;
     private TokenData cachedData = null;
     private Set<String> varNames = null;
+
+    private static final Map<String, BinaryOperationTableEntry> binaryOperators = new HashMap<>();
+    private static int maxOperatorLength;
+    private static final Map<String, UnaryOperationTableEntry> unaryOperators = new HashMap<>();
+
+    static {
+        maxOperatorLength = 0;
+        for (BinaryOperationTableEntry entry : BinaryOperationTableEntry.values()) {
+            binaryOperators.put(entry.getSymbol(), entry);
+            maxOperatorLength = Integer.max(maxOperatorLength, entry.getSymbol().length());
+        }
+        for (UnaryOperationTableEntry entry : UnaryOperationTableEntry.values()) {
+            unaryOperators.put(entry.getSymbol(), entry);
+            maxOperatorLength = Integer.max(maxOperatorLength, entry.getSymbol().length());
+        }
+    }
 
     private enum State {
         PRE, POST, END
@@ -104,6 +122,42 @@ public class StringSource extends ExpressionSource {
         pos += strVal.length();
     }
 
+    private boolean hasOperator(String symbol) {
+        return state == State.PRE ? unaryOperators.containsKey(symbol) :
+                state == State.POST && binaryOperators.containsKey(symbol);
+    }
+
+    private String identifyOperator() {
+        StringBuilder
+                name = new StringBuilder(),
+                lastSuccess = new StringBuilder();
+        read((x) -> {
+                    name.append(x);
+                    return true;
+                },
+                (x) -> {
+                    if (hasOperator(name.toString())) {
+                        lastSuccess.setLength(0);
+                        lastSuccess.append(name);
+                    }
+                    name.append(x);
+                    return name.length() <= maxOperatorLength;
+                },
+                x -> true);
+        return lastSuccess.toString();
+    }
+
+    private void cacheOperator(String symbol) throws ParserException {
+        switch (state) {
+            case PRE:
+                cacheUnaryOp(unaryOperators.get(symbol));
+                break;
+            case POST:
+                cacheBinaryOp(binaryOperators.get(symbol));
+                break;
+        }
+    }
+
     private void cacheNext() throws ParserException {
         if (cachedData != null || state == State.END) {
             return;
@@ -133,52 +187,26 @@ public class StringSource extends ExpressionSource {
                     cachedTokenType = TokenType.RIGHT_PAR;
                     pos++;
                     break;
-                case '+':
-                    cacheBinaryOp(BinaryOperationTableEntry.ADD);
-                    break;
                 case '-':
-                    if (state == State.PRE) {
-                        if (!(buf = read(this::isStartNum, this::isPartNum, x -> !x.equals("-"))).isEmpty()) {
-                            cacheNumber(buf);
-                        } else {
-                            cacheUnaryOp(UnaryOperationTableEntry.UNARY_MINUS);
-                        }
-                    } else {
-                        cacheBinaryOp(BinaryOperationTableEntry.SUBTRACT);
+                    if (state == State.PRE &&
+                        !(buf = read(this::isStartNum, this::isPartNum, x -> !x.equals("-"))).isEmpty()) {
+                        cacheNumber(buf);
+                        break;
                     }
-                    break;
-                case '*':
-                    cacheBinaryOp(BinaryOperationTableEntry.MULTIPLY);
-                    break;
-                case '/':
-                    cacheBinaryOp(BinaryOperationTableEntry.DIVIDE);
-                    break;
+                // fallthrough
                 default:
-                    String name = read(this::isStartName, this::isPartName, x -> true);
-                    if (name.isEmpty()) {
-                        throw error(
-                            UnrecognizedTokenException::new,
-                            "unsupported token part: '" + data.charAt(pos) + "'"
-                        );
-                    }
-                    switch (name) {
-                        case "min":
-                            cacheBinaryOp(BinaryOperationTableEntry.MIN);
-                            break;
-                        case "max":
-                            cacheBinaryOp(BinaryOperationTableEntry.MAX);
-                            break;
-                        case "count":
-                            cacheUnaryOp(UnaryOperationTableEntry.COUNT);
-                            break;
-                        default:
-                            if (varNames != null && !varNames.contains(name)) {
-                                throw error(
-                                    UnrecognizedTokenException::new,
+                    String opName = identifyOperator();
+                    if (opName.isEmpty()) {
+                        String name = read(this::isStartName, this::isPartName, x -> true);
+                        if (varNames != null && !varNames.contains(name)) {
+                            throw error(
+                                    (pos, context, message) -> new UnrecognizedTokenException(pos, context, name, message),
                                     "variable/function name '" + name + "' not supported!"
-                                );
-                            }
-                            cacheName(name);
+                            );
+                        }
+                        cacheName(name);
+                    } else {
+                        cacheOperator(opName);
                     }
             }
         }
