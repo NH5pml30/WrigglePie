@@ -1,22 +1,18 @@
 "use strict";
 
-const cnst = const_var => map => const_var;
+const cnst = const_var => () => const_var;
 const pi = cnst(Math.PI);
 const e = cnst(Math.E);
-const variable = name => (...args) => name === "x" ? args[0] : name === "y" ? args[1] : args[2];
+const variable = name => (...varVals) => name === "x" ? varVals[0] : name === "y" ? varVals[1] : varVals[2];
 
-const binary = oper => (left, right) => (...args) => oper(left(...args), right(...args));
-const unary = oper => arg => (...args) => oper(arg(...args));
+const binary = oper => (left, right) => (...varVals) => oper(left(...varVals), right(...varVals));
+const unary = oper => arg => (...varVals) => oper(arg(...varVals));
 
 const add = binary((left, right) => left + right);
 const subtract = binary((left, right) => left - right);
 const multiply = binary((left, right) => left * right);
 const divide = binary((left, right) => left / right);
 const negate = unary(arg => -arg);
-const sin = unary(Math.sin);
-const cos = unary(Math.cos);
-const cube = unary(arg => arg * arg * arg);
-const cuberoot = unary(Math.cbrt);
 
 const checkToken = (token, isStart, isPart) =>
     token.split("").reduce((result, current, index) =>
@@ -25,45 +21,64 @@ const checkToken = (token, isStart, isPart) =>
 const charChecker = reg => reg.test.bind(reg);
 
 const isDigit = charChecker(/\d/);
-const isAlpha = charChecker(/[a-zA-Z]/);
-const isStartIdentifier = charChecker(/[a-zA-Z0-9]/);
-const isPartIdentifier = charChecker(/\w/);
 
 const isStartNum = (x, str) => isDigit(x) || x === '-' && str.length > 1;
 const isPartNum = isDigit;
 
-const reverseArgs = f => (right, left) => f(left, right);
+const applyVarVals = (array, varVals) => array.map(curVal => curVal(...varVals));
 
-const binaryOperationMap = {
-    "+": add,
-    "-": subtract,
-    "*": multiply,
-    "/": divide,
-};
+const sumN = length => (...args) => (...varVals) => applyVarVals(args, varVals).reduce((sum, x) => sum + x, 0);
+const medN = length => (...args) => (...varVals) => applyVarVals(args, varVals).sort((x, y) => x - y)[Math.floor(length / 2)];
+const avgN = length => (...args) => (...varVals) => sumN(length)(...args)(...varVals) / length;
 
-const unaryOperationMap = {
-    "negate": negate,
-    "sin": sin,
-    "cos": cos,
-    "cube": cube,
-    "cuberoot": cuberoot,
-};
+const med3 = medN(3);
+const avg5 = avgN(5);
 
-const constMap = {
-    "pi": pi,
-    "e": e,
-};
+const operationsByArity = [
+    {
+        "pi": pi,
+        "e": e,
+    },
+    {
+        "negate": negate,
+    },
+    {
+        "+": add,
+        "-": subtract,
+        "*": multiply,
+        "/": divide,
+    },
+    {
+        "med3": med3
+    },
+    {},
+    {
+        "avg5": avg5
+    }
+];
+
+const hasOperation = (token) => operationsByArity.reduce(
+    (result, array) => result ? true : token in array,
+    false
+);
+const getOperation = (token, stack) => operationsByArity.reduce(
+    (result, array, index) =>
+        token in array ?
+            index === 0 ?
+                array[token] :
+                array[token](...stack.splice(stack.length - index, index)) :
+            result,
+    undefined
+);
 
 const parse = str =>
     str.trim().split(/\s+/).reduce((stack, current) => {
         checkToken(current, isStartNum, isPartNum) ?
             stack.push(cnst(+current)) :
-            current in binaryOperationMap ?
-                stack.push(reverseArgs(binaryOperationMap[current])(stack.pop(), stack.pop())) :
-                current in unaryOperationMap ?
-                    stack.push(unaryOperationMap[current](stack.pop())) :
-                    current in constMap ?
-                        stack.push(constMap[current]) :
-                        stack.push(variable(current));
+            hasOperation(current) ?
+                stack.push(getOperation(current, stack)) :
+                stack.push(variable(current));
         return stack;
     }, []).pop();
+
+console.log(med3(variable('x'), variable('y'), variable('z'))(0, 1, 2));
