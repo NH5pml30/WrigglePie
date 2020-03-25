@@ -5,22 +5,24 @@ import expression.operation.exception.EvaluationException;
 
 import java.util.Map;
 
-public abstract class OperationBase
-    implements Comparable<OperationBase>, CommonExpression {
+public abstract class OperationBase<T extends OperableTable<T, EvalT>, EvalT extends Number>
+    implements
+        Comparable<OperationBase<T, EvalT>>,
+        CommonExpression<T, EvalT> {
     final private OperationTableBase entry;
+    final protected OperableTable<T, EvalT> table;
 
-    OperationBase(OperationTableBase entry) {
+    OperationBase(final T table, final OperationTableBase entry) {
+        this.table = table;
         this.entry = entry;
     }
 
-    abstract <T extends OperableTable<T, EvalT>, EvalT extends Number>
-    EvalT evaluateUnsafe(T table, Map<String, EvalT> x);
+    abstract EvalT evaluateUnsafe(final Map<String, EvalT> x);
 
     @Override
-    public <T extends OperableTable<T, EvalT>, EvalT extends Number>
-    EvalT evaluate(T table, Map<String, EvalT> x) {
+    public EvalT evaluate(final Map<String, EvalT> x) {
         try {
-            return evaluateUnsafe(table, x);
+            return evaluateUnsafe(x);
         } catch (EvaluationException e) {
             if (e.getFilled()) {
                 throw e;
@@ -45,7 +47,7 @@ public abstract class OperationBase
     }
 
     @Override
-    public int compareTo(OperationBase other) {
+    public int compareTo(final OperationBase<T, EvalT> other) {
         return entry.comparePrior(other.entry);
     }
 }

@@ -1,5 +1,9 @@
 package expression;
 
+import expression.operation.OperableBigIntTable;
+import expression.operation.OperableDoubleTable;
+import expression.operation.OperableIntTable;
+import expression.operation.OperableTable;
 import expression.operation.exception.EvaluationException;
 import expression.parser.ExpressionParser;
 import expression.parser.exception.ParserException;
@@ -44,6 +48,23 @@ public class ParserMain {
         }
     }
 
+    private static <T extends OperableTable<T, EvalT>, EvalT extends Number>
+    void count(T table, EvalT defaultVal, String[] args, String expression, final Set<String> names, final Set<String> outNames) throws ParserException {
+        CommonExpression<T, EvalT> expr =
+            new ExpressionParser<T, EvalT>(table).parse(
+                expression,
+                names,
+                outNames
+            );
+        System.out.println("Got: " + expr.toString());
+        EvalT
+            val0 = defaultVal,
+            val1 = defaultVal,
+            val2 = defaultVal;
+        getNumbers(args, 2, table::parseNumber, new Number[]{val0, val1, val2}, outNames);
+        System.out.println(expr.evaluate(val0, val1, val2));
+    }
+
     public static void main(String[] args) {
         if (args.length < 2 || !args[0].equals("-i") && !args[0].equals("-d") && !args[0].equals("-bi")) {
             System.out.println("Usage: <executable> -mode expression [-x [-y [-z]]]");
@@ -68,24 +89,28 @@ public class ParserMain {
                     names = Set.of();
                     break;
             }
-            CommonExpression expr = new ExpressionParser().parse(expression, names, outNames);
-            System.out.println("Got: " + expr.toString());
 
             switch (args[0]) {
                 case "-i":
-                    Integer[] iVals = new Integer[] {0, 0, 0};
-                    getNumbers(args, 2, Integer::parseInt, iVals, outNames);
-                    System.out.println(expr.evaluate(iVals[0], iVals[1], iVals[2]));
+                    count(
+                        OperableIntTable.getInstance(), 0,
+                        args, expression,
+                        names, outNames
+                    );
                     break;
                 case "-d":
-                    Double[] dVals = new Double[] {0.0, 0.0, 0.0};
-                    getNumbers(args, 2, Double::parseDouble, dVals, outNames);
-                    System.out.println(expr.evaluate(dVals[0], dVals[1], dVals[2]));
+                    count(
+                        OperableDoubleTable.getInstance(), 0.0,
+                        args, expression,
+                        names, outNames
+                    );
                     break;
                 case "-bi":
-                    BigInteger[] biVals = new BigInteger[] {BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO};
-                    getNumbers(args, 2, BigInteger::new, biVals, outNames);
-                    System.out.println(expr.evaluate(biVals[0], biVals[1], biVals[2]));
+                    count(
+                        OperableBigIntTable.getInstance(), BigInteger.ZERO,
+                        args, expression,
+                        names, outNames
+                    );
                     break;
             }
         } catch (UnrecognizedTokenException e) {

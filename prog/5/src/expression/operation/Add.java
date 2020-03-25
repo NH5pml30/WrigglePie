@@ -4,7 +4,8 @@ import expression.CommonExpression;
 
 import java.util.Map;
 
-public class Add extends BinaryOperation {
+public class Add<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        extends BinaryOperation<T, EvalT> {
     private static BinaryOperationTableEntry entry;
     public static void setEntry(BinaryOperationTableEntry newEntry) {
         entry = newEntry;
@@ -13,12 +14,15 @@ public class Add extends BinaryOperation {
         return entry;
     }
 
-    public Add(CommonExpression left, CommonExpression right) {
-        super(entry, left, right);
+    public Add(final T table,
+               final CommonExpression<T, EvalT> left,
+               final CommonExpression<T, EvalT> right
+    ) {
+        super(table, entry, left, right);
     }
 
     @Override
-    <T extends OperableTable<T, EvalT>, EvalT extends Number> EvalT evaluateUnsafe(T table, Map<String, EvalT> x) {
-        return evaluateHelper(table, table::add, x);
+    EvalT evaluateUnsafe(final Map<String, EvalT> x) {
+        return evaluateHelper(table::add, x);
     }
 }

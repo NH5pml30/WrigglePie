@@ -5,25 +5,31 @@ import expression.CommonExpression;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 
-public abstract class BinaryOperation
-    extends OperationBase {
+public abstract class BinaryOperation<T extends OperableTable<T, EvalT>, EvalT extends Number>
+    extends OperationBase<T, EvalT> {
     public interface Factory {
-        BinaryOperation create(CommonExpression left, CommonExpression right);
+        <T extends OperableTable<T, EvalT>,
+         EvalT extends Number>
+        BinaryOperation<T, EvalT> create(
+            final T table,
+            final CommonExpression<T, EvalT> left,
+            final CommonExpression<T, EvalT> right
+        );
     }
 
     private final BinaryOperationTableEntry entry;
-    protected final CommonExpression left, right;
+    protected final CommonExpression<T, EvalT> left, right;
 
-    BinaryOperation(BinaryOperationTableEntry entry, final CommonExpression left, final CommonExpression right) {
-        super(entry);
+    BinaryOperation(final T table, final BinaryOperationTableEntry entry,
+                    final CommonExpression<T, EvalT> left, final CommonExpression<T, EvalT> right) {
+        super(table, entry);
         this.entry = entry;
         this.left = left;
         this.right = right;
     }
 
-    protected <T extends OperableTable<T, EvalT>, EvalT extends Number>
-    EvalT evaluateHelper(T table, final BinaryOperator<EvalT> op, Map<String, EvalT> x) {
-        return op.apply(left.evaluate(table, x), right.evaluate(table, x));
+    EvalT evaluateHelper(final BinaryOperator<EvalT> op, final Map<String, EvalT> x) {
+        return op.apply(left.evaluate(x), right.evaluate(x));
     }
 
     @Override
@@ -41,7 +47,7 @@ public abstract class BinaryOperation
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        BinaryOperation op = (BinaryOperation)o;
+        BinaryOperation<T, EvalT> op = (BinaryOperation<T, EvalT>)o;
         return left.equals(op.left) && right.equals(op.right);
     }
 

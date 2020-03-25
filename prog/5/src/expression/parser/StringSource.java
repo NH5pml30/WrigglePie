@@ -148,12 +148,15 @@ public class StringSource extends ExpressionSource {
     }
 
     private void cacheOperator(String symbol) throws ParserException {
-        switch (state) {
+        switch (state) { // :NOTE: non-exhaustive cases set
+            // new version:
             case PRE:
                 cacheUnaryOp(unaryOperators.get(symbol));
                 break;
             case POST:
                 cacheBinaryOp(binaryOperators.get(symbol));
+                break;
+            case END:
                 break;
         }
     }
@@ -230,6 +233,8 @@ public class StringSource extends ExpressionSource {
                     break;
                 case POST:
                     message += "')', binary operation or end of expression";
+                    break;
+                case END:
                     break;
             }
             throw error(UnexpectedTokenException::new, message);

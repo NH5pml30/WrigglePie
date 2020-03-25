@@ -5,33 +5,22 @@ import expression.operation.*;
 import java.math.BigInteger;
 import java.util.Map;
 
-public interface CommonExpression extends BaseExpression, TripleExpression {
-    default <T extends OperableTable<T, EvalT>, EvalT extends Number> EvalT evaluate(T table, EvalT x, EvalT y, EvalT z) {
-        return evaluate(table, Map.of("x", x, "y", y, "z", z));
-    }
-
+public interface CommonExpression<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        extends BaseExpression<T, EvalT>, TripleExpression<T, EvalT> {
+    
+    // :NOTE: Bad idea. Task require to compute all evaluations of expression in one type
+    // Imaging that I added in some operator method:
+    /*
+     * public <T extends OperableTable<T, EvalT>, EvalT extends Number> EvalT evaluate(T table, EvalT x, EvalT y, EvalT z) {
+     *     return op (left.evaluate (x, y, z), (EvalT) right.<OperableTable <Byte, ...>> evaluate ((Byte) x, (Byte) y, (Byte) z))
+     * }
+     *
+     * In case of T != Byte computations will be in different types and nothing can stop me
+     * (Parameterization should be on type level)
+     */
+    // new version:
     @Override
-    default int evaluate(int x, int y, int z) {
-        return evaluate(OperableIntTable.getInstance(), Map.of("x", x, "y", y, "z", z));
-    }
-
-    @Override
-    default short evaluate(short x, short y, short z) {
-        return evaluate(OperableShortTable.getInstance(), Map.of("x", x, "y", y, "z", z));
-    }
-
-    @Override
-    default long evaluate(long x, long y, long z) {
-        return evaluate(OperableLongTable.getInstance(), Map.of("x", x, "y", y, "z", z));
-    }
-
-    @Override
-    default double evaluate(double x, double y, double z) {
-        return evaluate(OperableDoubleTable.getInstance(), Map.of("x", x, "y", y, "z", z));
-    }
-
-    @Override
-    default BigInteger evaluate(BigInteger x, BigInteger y, BigInteger z) {
-        return evaluate(OperableBigIntTable.getInstance(), Map.of("x", x, "y", y, "z", z));
+    default EvalT evaluate(EvalT x, EvalT y, EvalT z) {
+        return evaluate(Map.of("x", x, "y", y, "z", z));
     }
 }

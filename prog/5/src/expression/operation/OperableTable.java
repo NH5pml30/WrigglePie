@@ -1,10 +1,13 @@
 package expression.operation;
 
+import expression.operation.exception.ConstFormatException;
+import expression.parser.exception.ParserException;
+
 public interface OperableTable<
                                   T extends OperableTable<T, EvalT>,
                                   EvalT extends Number
                                   > {
-    EvalT parseNumber(String str);
+    EvalT parseNumber(String str) throws ConstFormatException;
 
     EvalT add(EvalT left, EvalT right);
 

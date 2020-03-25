@@ -4,7 +4,8 @@ import expression.operation.OperableTable;
 
 import java.util.Map;
 
-public class Variable implements CommonExpression {
+public class Variable<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        implements CommonExpression<T, EvalT> {
     private final String name;
 
     public Variable(String name) {
@@ -12,8 +13,7 @@ public class Variable implements CommonExpression {
     }
 
     @Override
-    public <T extends OperableTable<T, EvalT>, EvalT extends Number>
-    EvalT evaluate(T table, Map<String, EvalT> x) {
+    public EvalT evaluate(final Map<String, EvalT> x) {
         return x.get(name);
     }
 
@@ -30,7 +30,7 @@ public class Variable implements CommonExpression {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Variable variable = (Variable)o;
+        Variable<T, EvalT> variable = (Variable<T, EvalT>)o;
         return name.equals(variable.name);
     }
 

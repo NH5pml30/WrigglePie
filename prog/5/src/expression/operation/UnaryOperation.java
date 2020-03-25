@@ -5,24 +5,30 @@ import expression.CommonExpression;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
-public abstract class UnaryOperation extends OperationBase {
+public abstract class UnaryOperation<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        extends OperationBase<T, EvalT> {
     private final UnaryOperationTableEntry entry;
-    private final CommonExpression expr;
+    private final CommonExpression<T, EvalT> expr;
 
     public interface Factory {
-        UnaryOperation create(CommonExpression expr);
+        <T extends OperableTable<T, EvalT>,
+         EvalT extends Number>
+        UnaryOperation<T, EvalT> create(
+            final T table,
+            final CommonExpression<T, EvalT> expr
+        );
     }
 
-    UnaryOperation(final UnaryOperationTableEntry entry,
-                   final CommonExpression expr) {
-        super(entry);
+    UnaryOperation(final T table,
+                   final UnaryOperationTableEntry entry,
+                   final CommonExpression<T, EvalT> expr) {
+        super(table, entry);
         this.entry = entry;
         this.expr = expr;
     }
 
-    protected <T extends OperableTable<T, EvalT>, EvalT extends Number>
-    EvalT evaluateHelper(T table, final UnaryOperator<EvalT> op, Map<String, EvalT> x) {
-        return op.apply(expr.evaluate(table, x));
+    EvalT evaluateHelper(final UnaryOperator<EvalT> op, final Map<String, EvalT> x) {
+        return op.apply(expr.evaluate(x));
     }
 
     @Override
@@ -38,7 +44,7 @@ public abstract class UnaryOperation extends OperationBase {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        UnaryOperation op = (UnaryOperation)o;
+        UnaryOperation<T, EvalT> op = (UnaryOperation<T, EvalT>)o;
         return expr.equals(op.expr);
     }
 

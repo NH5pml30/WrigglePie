@@ -4,7 +4,8 @@ import expression.CommonExpression;
 
 import java.util.Map;
 
-public class Negate extends UnaryOperation {
+public class Negate<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        extends UnaryOperation<T, EvalT> {
     private static UnaryOperationTableEntry entry;
     public static void setEntry(UnaryOperationTableEntry newEntry) {
         entry = newEntry;
@@ -13,13 +14,14 @@ public class Negate extends UnaryOperation {
         return entry;
     }
 
-    public Negate(CommonExpression expr) {
-        super(entry, expr);
+    public Negate(final T table,
+                  final CommonExpression<T, EvalT> expr
+    ) {
+        super(table, entry, expr);
     }
 
     @Override
-    <T extends OperableTable<T, EvalT>, EvalT extends Number> EvalT
-    evaluateUnsafe(T table, Map<String, EvalT> x) {
-        return evaluateHelper(table, table::negate, x);
+    EvalT evaluateUnsafe(final Map<String, EvalT> x) {
+        return evaluateHelper(table::negate, x);
     }
 }

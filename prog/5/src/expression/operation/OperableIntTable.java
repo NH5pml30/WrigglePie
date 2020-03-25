@@ -1,6 +1,8 @@
 package expression.operation;
 
 import expression.operation.exception.*;
+import expression.operation.exception.ConstFormatException;
+import expression.parser.exception.ParserException;
 
 public final class OperableIntTable implements OperableTable<OperableIntTable, Integer> {
     private static final OperableIntTable instance = new OperableIntTable();
@@ -10,7 +12,7 @@ public final class OperableIntTable implements OperableTable<OperableIntTable, I
     }
 
     @Override
-    public Integer parseNumber(String str) {
+    public Integer parseNumber(String str) throws ConstFormatException {
         try {
             return Integer.parseInt(str);
         } catch (NumberFormatException e) {

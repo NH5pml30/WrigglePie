@@ -1,25 +1,27 @@
 package expression;
 
 import expression.operation.OperableTable;
+import expression.operation.exception.ConstFormatException;
 
 import java.util.Map;
+import java.util.function.Function;
 
-public class Const implements CommonExpression {
-    private final String strVal;
+public class Const<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        implements CommonExpression<T, EvalT> {
+    private final EvalT val;
 
-    public Const(final String strVal) {
-        this.strVal = strVal;
+    public Const(final T table, final String strVal) throws ConstFormatException {
+        this.val = table.parseNumber(strVal);
     }
 
     @Override
-    public <T extends OperableTable<T, EvalT>, EvalT extends Number>
-    EvalT evaluate(T table, Map<String, EvalT> x) {
-        return table.parseNumber(strVal);
+    public EvalT evaluate(final Map<String, EvalT> x) {
+        return val;
     }
 
     @Override
     public String toString() {
-        return strVal;
+        return val.toString();
     }
 
     @Override
@@ -30,12 +32,12 @@ public class Const implements CommonExpression {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Const baseConst = (Const)o;
-        return strVal.equals(baseConst.strVal);
+        Const<T, EvalT> baseConst = (Const<T, EvalT>)o;
+        return val.equals(baseConst.val);
     }
 
     @Override
     public int hashCode() {
-        return strVal.hashCode();
+        return val.hashCode();
     }
 }

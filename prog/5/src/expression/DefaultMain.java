@@ -1,5 +1,6 @@
 package expression;
 
+import expression.operation.OperableDoubleTable;
 import expression.operation.OperableIntTable;
 import expression.operation.exception.EvaluationException;
 import expression.parser.ExpressionParser;
@@ -9,9 +10,9 @@ public class DefaultMain {
     public static void main(String[] args) {
         String expression = "1000000*x*x*x*x*x/(x-1)";
         System.out.println("x\tf");
-        CommonExpression expr;
+        CommonExpression<OperableIntTable, Integer> expr;
         try {
-            expr = new ExpressionParser().parse(expression);
+            expr = new ExpressionParser<>(OperableIntTable.getInstance()).parse(expression);
         } catch (ParserException e) {
             System.out.println("Cannot run default test: " + e.getMessage());
             return;
@@ -21,7 +22,7 @@ public class DefaultMain {
             System.out.print(x);
             System.out.print("\t");
             try {
-                System.out.println(expr.evaluate(OperableIntTable.getInstance(), x, 0, 0));
+                System.out.println(expr.evaluate(x, 0, 0));
             } catch (EvaluationException e) {
                 System.out.println(e.getMessage());
             }
