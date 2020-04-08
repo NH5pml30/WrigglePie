@@ -47,8 +47,8 @@ public abstract class BinaryOperation<T extends OperableTable<T, EvalT>, EvalT e
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        BinaryOperation<T, EvalT> op = (BinaryOperation<T, EvalT>)o;
-        return left.equals(op.left) && right.equals(op.right);
+        BinaryOperation<?, ?> op = (BinaryOperation<?, ?>)o;
+        return op.table == table && op.entry == entry && left.equals(op.left) && right.equals(op.right);
     }
 
     @Override

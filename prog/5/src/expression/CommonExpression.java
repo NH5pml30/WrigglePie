@@ -5,8 +5,13 @@ import expression.operation.*;
 import java.math.BigInteger;
 import java.util.Map;
 
-public interface CommonExpression<T extends OperableTable<T, EvalT>, EvalT extends Number>
-        extends BaseExpression<T, EvalT>, TripleExpression<T, EvalT> {
+public abstract class CommonExpression<T extends OperableTable<T, EvalT>, EvalT extends Number>
+        implements BaseExpression<T, EvalT>, TripleExpression<T, EvalT> {
+    protected final T table;
+
+    public CommonExpression(final T table) {
+        this.table = table;
+    }
     
     // :NOTE: Bad idea. Task require to compute all evaluations of expression in one type
     // Imaging that I added in some operator method:
@@ -20,7 +25,7 @@ public interface CommonExpression<T extends OperableTable<T, EvalT>, EvalT exten
      */
     // new version:
     @Override
-    default EvalT evaluate(EvalT x, EvalT y, EvalT z) {
+    public EvalT evaluate(EvalT x, EvalT y, EvalT z) {
         return evaluate(Map.of("x", x, "y", y, "z", z));
     }
 }

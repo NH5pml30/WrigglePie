@@ -32,7 +32,8 @@ const Const = inheritedWithMatchingConstructor(
         };
         proto.simplify = function(level) {
             return level === 0 ? this.value : this;
-        }
+        };
+        proto.prefix = proto.toString;
     },
     function(cnst) {
         this.value = cnst;
@@ -56,6 +57,7 @@ const Variable = inheritedWithMatchingConstructor(
         proto.diff = function(name) {
             return new Const(name === this.name ? 1 : 0);
         };
+        proto.prefix = proto.toString();
     },
     function(name) {
         this.name = name;
@@ -83,8 +85,11 @@ const NAryOp = N => (operation, symbol, diff, simplify = Expression.prototype.si
                     ...this.args.map(x => x.evaluate(...varVals))
                 );
             };
+            proto.argsToString = function(stringifier) {
+                return this.args.reduce((str, x) => str + ' ' + stringifier(x));
+            };
             proto.toString = function() {
-                return this.args.reduce((str, x) => str + ' ' + x) + ' ' + symbol;
+                return proto.argsToString.call(this, x => x.toString()) + ' ' + symbol;
             };
             proto.diff = diff;
             proto.simplify = function() {
@@ -99,6 +104,9 @@ const NAryOp = N => (operation, symbol, diff, simplify = Expression.prototype.si
                     x => x instanceof Const ? x.value : undefined
                 );
             };
+            proto.prefix = function() {
+                return '(' + symbol + ' ' + proto.argsToString.call(this, x => x.prefix()) + ')';
+            }
         },
         function(...args) {
             this.args = args.slice(0, N);
@@ -228,12 +236,15 @@ const hasOperation = (token) => operationsByArity.reduce(
     (result, array) => result ? true : token in array,
     false
 );
+const getOperationArgs = (operation, stack, start, arity) =>
+    arity === 0 ?
+        new operation() :
+        new operation(...stack.splice(start, start, start + arity));
+
 const getOperation = (token, stack) => operationsByArity.reduce(
     (result, array, index) =>
         token in array ?
-            index === 0 ?
-                new array[token]() :
-                new array[token](...stack.splice(stack.length - index, index)) :
+            getOperationArgs(array[token], stack, index - stack.length, stack.length) :
             result,
     undefined
 );
@@ -248,7 +259,31 @@ const parse = str =>
         return stack;
     }, []).pop();
 
-let difff = parse("5 z /").diff("x");
-console.log(difff.toString());
-let simplll = difff.simplify();
-console.log(simplll.toString());
+const getOperationArgsGlued = args =>
+    getOperationArgs(operationsByArity[args.length - 3][args[1]], args, 2, args.length - 3);
+
+const parsePrefixTokens = tokens =>
+    getOperationArgsGlued(tokens.reduceRight((args, current, index, array) => {
+        current = current.trim();
+        if (args.length > 0 && args[args.length - 1] === ')') {
+            return args;
+        }
+        args.length <= 1 ?
+            args.push(current) :
+            current === '(' ?
+                args.push(parsePrefixTokens(array)) :
+                current === ')' ?
+                    args.push(')') :
+                    checkToken(current, isStartNum, isPartNum) ?
+                        args.push(new Const(+current)) :
+                        args.push(new Variable(current));
+        if (current !== ')') {
+            array.pop();
+        }
+        return args;
+    }, []));
+
+const parsePrefix = str =>
+    parsePrefixTokens(str.trim().split(/(?<=\()|(?=\()|(?<=\))|(?=\))|\s+/).reverse());
+
+console.log(parsePrefix("(-(* -2 x)3)").prefix());

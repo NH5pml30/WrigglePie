@@ -76,7 +76,7 @@ public class ExpressionParser<T extends OperableTable<T, EvalT>, EvalT extends N
                     outVarNames.add(tokenData.str);
                 }
                 nextToken();
-                left = new Variable<>(lastData.str);
+                left = new Variable<>(table, lastData.str);
             } else if (test(TokenType.UNARY_OP)) {
                 UnaryOperationTableEntry op = lastData.uOp;
                 left = op.getFactory().create(table, parseSubexpression(op.getPriority(), outVarNames));

@@ -44,8 +44,8 @@ public abstract class UnaryOperation<T extends OperableTable<T, EvalT>, EvalT ex
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        UnaryOperation<T, EvalT> op = (UnaryOperation<T, EvalT>)o;
-        return expr.equals(op.expr);
+        UnaryOperation<?, ?> op = (UnaryOperation<?, ?>)o;
+        return op.table == table && op.entry == entry && expr.equals(op.expr);
     }
 
     @Override

@@ -5,10 +5,11 @@ import expression.operation.OperableTable;
 import java.util.Map;
 
 public class Variable<T extends OperableTable<T, EvalT>, EvalT extends Number>
-        implements CommonExpression<T, EvalT> {
+        extends CommonExpression<T, EvalT> {
     private final String name;
 
-    public Variable(String name) {
+    public Variable(final T table, String name) {
+        super(table);
         this.name = name;
     }
 
@@ -30,8 +31,8 @@ public class Variable<T extends OperableTable<T, EvalT>, EvalT extends Number>
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Variable<T, EvalT> variable = (Variable<T, EvalT>)o;
-        return name.equals(variable.name);
+        Variable<?, ?> variable = (Variable<?, ?>)o;
+        return table == variable.table && name.equals(variable.name);
     }
 
     @Override

@@ -6,14 +6,11 @@ import expression.operation.exception.EvaluationException;
 import java.util.Map;
 
 public abstract class OperationBase<T extends OperableTable<T, EvalT>, EvalT extends Number>
-    implements
-        Comparable<OperationBase<T, EvalT>>,
-        CommonExpression<T, EvalT> {
+        extends CommonExpression<T, EvalT> implements Comparable<OperationBase<T, EvalT>> {
     final private OperationTableBase entry;
-    final protected OperableTable<T, EvalT> table;
 
     OperationBase(final T table, final OperationTableBase entry) {
-        this.table = table;
+        super(table);
         this.entry = entry;
     }
 

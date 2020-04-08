@@ -7,10 +7,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class Const<T extends OperableTable<T, EvalT>, EvalT extends Number>
-        implements CommonExpression<T, EvalT> {
+        extends CommonExpression<T, EvalT> {
     private final EvalT val;
 
     public Const(final T table, final String strVal) throws ConstFormatException {
+        super(table);
         this.val = table.parseNumber(strVal);
     }
 
@@ -32,8 +33,8 @@ public class Const<T extends OperableTable<T, EvalT>, EvalT extends Number>
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Const<T, EvalT> baseConst = (Const<T, EvalT>)o;
-        return val.equals(baseConst.val);
+        Const<?, ?> baseConst = (Const<?, ?>)o;
+        return table == baseConst.table && val.equals(baseConst.val);
     }
 
     @Override
