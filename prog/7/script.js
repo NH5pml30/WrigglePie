@@ -7,19 +7,20 @@ Expression.prototype.simplify = function() { return this; };
 
 function doNothing() {}
 
-function inheritedWithMatchingConstructor(parent, prototypeFiller = doNothing, fieldFiller = doNothing) {
+function inheritedWithMatchingConstructor(parent, name, prototypeFiller = doNothing, fieldFiller = doNothing) {
     let Constructor = function(...args) {
         parent.apply(this, args);
         fieldFiller.apply(this, args);
     };
     Constructor.prototype = Object.create(parent.prototype);
     Constructor.prototype.constructor = Constructor;
+    Constructor.prototype.name = name;
     prototypeFiller(Constructor.prototype);
     return Constructor;
 }
 
 const Const = inheritedWithMatchingConstructor(
-    Expression,
+    Expression, "Const",
     function(proto) {
         proto.evaluate = function(...varVals) {
             return this.value;
@@ -46,7 +47,7 @@ const varName2indexMap = {
     "z": 2
 };
 const Variable = inheritedWithMatchingConstructor(
-    Expression,
+    Expression, "Variable",
     function(proto) {
         proto.evaluate = function(...varVals) {
             return varVals[varName2indexMap[this.name]];
@@ -57,7 +58,7 @@ const Variable = inheritedWithMatchingConstructor(
         proto.diff = function(name) {
             return new Const(name === this.name ? 1 : 0);
         };
-        proto.prefix = proto.toString();
+        proto.prefix = proto.toString;
     },
     function(name) {
         this.name = name;
@@ -76,8 +77,8 @@ function defaultOperationSimplify() {
         new this.constructor(...mapped);
 }
 
-const NAryOp = N => (operation, symbol, diff, simplify = Expression.prototype.simplify) =>
-    inheritedWithMatchingConstructor(Expression,
+const NAryOp = (N, name) => (operation, symbol, diff, simplify = Expression.prototype.simplify) =>
+    inheritedWithMatchingConstructor(Expression, name,
         function(proto) {
             proto.operation = operation;
             proto.evaluate = function(...varVals) {
@@ -86,10 +87,13 @@ const NAryOp = N => (operation, symbol, diff, simplify = Expression.prototype.si
                 );
             };
             proto.argsToString = function(stringifier) {
-                return this.args.reduce((str, x) => str + ' ' + stringifier(x));
+                return this.args.reduce(
+                    (str, x, ind) =>
+                        str + (ind === 0 ? '' : ' ') + stringifier(x), ""
+                );
             };
             proto.toString = function() {
-                return proto.argsToString.call(this, x => x.toString()) + ' ' + symbol;
+                return this.argsToString(x => x.toString()) + ' ' + symbol;
             };
             proto.diff = diff;
             proto.simplify = function() {
@@ -105,7 +109,7 @@ const NAryOp = N => (operation, symbol, diff, simplify = Expression.prototype.si
                 );
             };
             proto.prefix = function() {
-                return '(' + symbol + ' ' + proto.argsToString.call(this, x => x.prefix()) + ')';
+                return '(' + symbol + ' ' + this.argsToString(x => x.prefix()) + ')';
             }
         },
         function(...args) {
@@ -113,17 +117,17 @@ const NAryOp = N => (operation, symbol, diff, simplify = Expression.prototype.si
         }
     );
 
-const BinaryOp = NAryOp(2);
-const UnaryOp = NAryOp(1);
+const BinaryOp = name => NAryOp(2, name);
+const UnaryOp = name => NAryOp(1, name);
 
-const Negate = UnaryOp(
+const Negate = UnaryOp("Negate")(
     x => -x,
     'negate',
     function(name) {
             return new Negate(this.args[0].diff(name));
     }
 );
-const Square = UnaryOp(
+const Square = UnaryOp("Square")(
     x => x * x,
     'sqr',
     function(name) {
@@ -131,7 +135,7 @@ const Square = UnaryOp(
     }
 );
 
-const Add = BinaryOp(
+const Add = BinaryOp("Add")(
     (x, y) => x + y,
     '+',
     function(name) {
@@ -147,7 +151,7 @@ const Add = BinaryOp(
         return this;
     }
 );
-const Subtract = BinaryOp(
+const Subtract = BinaryOp("Subtract")(
     (x, y) => x - y,
     '-',
     function(name) {
@@ -160,7 +164,7 @@ const Subtract = BinaryOp(
         return this;
     }
 );
-const Multiply = BinaryOp(
+const Multiply = BinaryOp("Multiply")(
     (x, y) => x * y,
     '*',
     function(name) {
@@ -182,7 +186,7 @@ const Multiply = BinaryOp(
         return this;
     }
 );
-const Divide = BinaryOp(
+const Divide = BinaryOp("Divide")(
     (x, y) => x / y,
     '/',
     function(name) {
@@ -229,6 +233,8 @@ const isDigit = charChecker(/\d/);
 
 const isStartNum = (x, str) => isDigit(x) || x === '-' && str.length > 1;
 const isPartNum = isDigit;
+const isStartName = charChecker(/[a-zA-Z_]/);
+const isPartName = (x, str) => isStartName(x) || isDigit(x);
 
 const applyVarVals = (array, varVals) => array.map(curVal => curVal(...varVals));
 
@@ -259,31 +265,87 @@ const parse = str =>
         return stack;
     }, []).pop();
 
-const getOperationArgsGlued = args =>
-    getOperationArgs(operationsByArity[args.length - 3][args[1]], args, 2, args.length - 3);
+const parser = (function () {
+    const ParserError = inheritedWithMatchingConstructor(
+        Object, "ParserError", doNothing,
+        function(at, message) {
+            this.at = at;
+            this.message = "Cannot parse expression at " + at + ": " + message;
+        }
+    );
 
-const parsePrefixTokens = tokens =>
-    getOperationArgsGlued(tokens.reduceRight((args, current, index, array) => {
-        current = current.trim();
-        if (args.length > 0 && args[args.length - 1] === ')') {
+    const SpecificParserError = (name, fieldFiller) => inheritedWithMatchingConstructor(
+        ParserError, name, doNothing(), fieldFiller
+    );
+
+    const UnexpectedTokenError = SpecificParserError(
+        "UnexpectedTokenError",
+        function (at, message, token) {
+            this.token = token;
+        }
+    );
+
+    const getValueToken = token => {
+        if (checkToken(token, isStartNum, isPartNum)) {
+            return new Const(+token);
+        }
+        else if (checkToken(token, isStartName, isPartName) && token in varName2indexMap) {
+            return new Variable(token);
+        }
+        throw new Error();
+    };
+    const getOperationArgsGlued = args => {
+        if (args.length >= 4 && args[0] === '(' && args[args.length - 1] === ')' &&
+            args.length - 3 < operationsByArity.length &&
+            args[1] in operationsByArity[args.length - 3]) {
+            return getOperationArgs(operationsByArity[args.length - 3][args[1]], args, 2, args.length - 3);
+        }
+        throw new Error();
+    };
+    const parsePrefixTokens = tokens =>
+        getOperationArgsGlued(tokens.reduceRight((args, current, index, array) => {
+            current = current.trim();
+            if (args.length > 0 && args[args.length - 1] === ')') {
+                return args;
+            }
+            if (args.length === 0 && current !== '(') {
+                throw new Error();
+            }
+            if (args.length <= 1 || current === ')') {
+                args.push(current);
+            }
+            else if (current === '(') {
+                args.push(parsePrefixTokens(array));
+            } else {
+                args.push(getValueToken(current));
+            }
+            if (current !== ')') {
+                array.pop();
+            }
             return args;
+        }, []));
+    return {
+        parsePrefix: str => {
+            const tokens = str.trim().split(
+                /\s+|(?<=[\(\)])|(?=[\(\)])/
+            );
+            if (tokens[0] === '(') {
+                const res = parsePrefixTokens(tokens.reverse());
+                if (tokens.length !== 1) {
+                    throw new Error();
+                }
+                return res;
+            } else {
+                if (tokens.length !== 1) {
+                    throw new Error();
+                }
+                return getValueToken(tokens[0]);
+            }
         }
-        args.length <= 1 ?
-            args.push(current) :
-            current === '(' ?
-                args.push(parsePrefixTokens(array)) :
-                current === ')' ?
-                    args.push(')') :
-                    checkToken(current, isStartNum, isPartNum) ?
-                        args.push(new Const(+current)) :
-                        args.push(new Variable(current));
-        if (current !== ')') {
-            array.pop();
-        }
-        return args;
-    }, []));
+    };
+})();
 
-const parsePrefix = str =>
-    parsePrefixTokens(str.trim().split(/(?<=\()|(?=\()|(?<=\))|(?=\))|\s+/).reverse());
+const parsePrefix = parser.parsePrefix;
 
-console.log(parsePrefix("(-(* -2 x)3)").prefix());
+let exprr = parsePrefix("(- 3 y )");
+console.log(exprr.prefix());
