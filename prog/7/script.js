@@ -1,22 +1,23 @@
 function Expression() {
 }
-Expression.prototype.evaluate = undefined;
-Expression.prototype.toString = undefined;
-
 Expression.prototype.simplify = function() { return this; };
 
 function doNothing() {}
 
-function inheritedWithMatchingConstructor(parent, name, prototypeFiller = doNothing, fieldFiller = doNothing) {
-    let Constructor = function(...args) {
-        parent.apply(this, args);
-        fieldFiller.apply(this, args);
+function inheritedWithMatchingConstructor(parent, name, prototypeFiller = doNothing, fieldFiller = doNothing, args2parent = (...args) => args) {
+    // now console.log(new ...) outputs <name> {...} and not Constructor {...}
+    const Constructor = {
+        [name]: function(...args) {
+            parent.apply(this, args2parent(...args));
+            fieldFiller.apply(this, args);
+        }
     };
-    Constructor.prototype = Object.create(parent.prototype);
-    Constructor.prototype.constructor = Constructor;
-    Constructor.prototype.name = name;
-    prototypeFiller(Constructor.prototype);
-    return Constructor;
+    const Res = Constructor[name];
+    Res.prototype = Object.create(parent.prototype);
+    Res.prototype.constructor = Res;
+    Res.prototype.name = name;
+    prototypeFiller(Res.prototype);
+    return Res;
 }
 
 const Const = inheritedWithMatchingConstructor(
@@ -29,7 +30,7 @@ const Const = inheritedWithMatchingConstructor(
             return this.value.toString();
         };
         proto.diff = function(name) {
-            return new Const(0);
+            return Const.ZERO;
         };
         proto.simplify = function(level) {
             return level === 0 ? this.value : this;
@@ -40,6 +41,10 @@ const Const = inheritedWithMatchingConstructor(
         this.value = cnst;
     }
 );
+Const.E = new Const(Math.E);
+Const.ZERO = new Const(0);
+Const.ONE = new Const(1);
+Const.TWO = new Const(2);
 
 const varName2indexMap = {
     "x": 0,
@@ -56,7 +61,7 @@ const Variable = inheritedWithMatchingConstructor(
             return this.name;
         };
         proto.diff = function(name) {
-            return new Const(name === this.name ? 1 : 0);
+            return name === this.name ? Const.ONE : Const.ZERO;
         };
         proto.prefix = proto.toString;
     },
@@ -77,8 +82,10 @@ function defaultOperationSimplify() {
         new this.constructor(...mapped);
 }
 
-const NAryOp = (N, name) => (operation, symbol, diff, simplify = Expression.prototype.simplify) =>
-    inheritedWithMatchingConstructor(Expression, name,
+const Operation = inheritedWithMatchingConstructor(Expression, "Operation");
+
+const NAryOp = (name) => (operation, symbol, diff, simplify = Expression.prototype.simplify) =>
+    inheritedWithMatchingConstructor(Operation, name,
         function(proto) {
             proto.operation = operation;
             proto.evaluate = function(...varVals) {
@@ -113,12 +120,12 @@ const NAryOp = (N, name) => (operation, symbol, diff, simplify = Expression.prot
             }
         },
         function(...args) {
-            this.args = args.slice(0, N);
+            this.args = args.slice(0);
         }
     );
 
-const BinaryOp = name => NAryOp(2, name);
-const UnaryOp = name => NAryOp(1, name);
+const BinaryOp = name => NAryOp(name);
+const UnaryOp = name => NAryOp(name);
 
 const Negate = UnaryOp("Negate")(
     x => -x,
@@ -131,7 +138,7 @@ const Square = UnaryOp("Square")(
     x => x * x,
     'sqr',
     function(name) {
-        return new Multiply(new Const(2), this.args[0].diff(name));
+        return new Multiply(Const.TWO, this.args[0].diff(name));
     }
 );
 
@@ -175,7 +182,7 @@ const Multiply = BinaryOp("Multiply")(
     },
     function(mapped, toNumber) {
         if (toNumber(mapped[0]) === 0 || toNumber(mapped[1]) === 0) {
-            return new Const(0);
+            return Const.ZERO;
         }
         if (toNumber(mapped[0]) === 1) {
             return mapped[1];
@@ -200,10 +207,57 @@ const Divide = BinaryOp("Divide")(
     },
     function(mapped, toNumber) {
         if (toNumber(mapped[0]) === 0) {
-            return new Const(0);
+            return Const.ZERO;
         }
         if (toNumber(mapped[1]) === 1) {
             return mapped[0];
+        }
+        return this;
+    }
+);
+const Power = BinaryOp("Power")(
+    (x, y) => Math.pow(x, y),
+    'pow',
+    function(name) {
+        return new Multiply(
+            new Add(
+                new Divide(
+                    new Multiply(this.args[0].diff(name), this.args[1]),
+                    this.args[0]
+                ),
+                new Multiply(new Log(Const.E, this.args[0]), this.args[1].diff(name))
+            ),
+            this
+        );
+    },
+    function(mapped, toNumber) {
+        if (toNumber(mapped[0]) === 0 || toNumber(mapped[0]) === 1) {
+            return mapped[0];
+        }
+        if (toNumber(mapped[1]) === 1) {
+            return mapped[0];
+        }
+        if (toNumber(mapped[1]) === 0) {
+            return Const.ONE;
+        }
+        return this;
+    }
+);
+const Log = BinaryOp("Logarithm")(
+    (x, y) => Math.log(Math.abs(y)) / Math.log(Math.abs(x)),
+    'log',
+    function(name) {
+        return new Divide(
+            new Subtract(
+                new Divide(this.args[1].diff(name), this.args[1]),
+                new Multiply(this, new Divide(this.args[0].diff(name), this.args[0]))
+            ),
+            new Log(Const.E, this.args[0])
+        );
+    },
+    function(mapped, toNumber) {
+        if (toNumber(mapped[1]) === 1 || toNumber(mapped[1]) === -1) {
+            return Const.ZERO;
         }
         return this;
     }
@@ -220,8 +274,15 @@ const operationsByArity = [
         "-": Subtract,
         "*": Multiply,
         "/": Divide,
+        "log": Log,
+        "pow": Power,
     },
 ];
+
+
+/***
+ * Homework #7
+ ***/
 
 const checkToken = (token, isStart, isPart) =>
     token.split("").reduce((result, current, index) =>
@@ -230,13 +291,10 @@ const checkToken = (token, isStart, isPart) =>
 const charChecker = reg => reg.test.bind(reg);
 
 const isDigit = charChecker(/\d/);
-
 const isStartNum = (x, str) => isDigit(x) || x === '-' && str.length > 1;
 const isPartNum = isDigit;
-const isStartName = charChecker(/[a-zA-Z_]/);
-const isPartName = (x, str) => isStartName(x) || isDigit(x);
-
-const applyVarVals = (array, varVals) => array.map(curVal => curVal(...varVals));
+const isWhitespace = charChecker(/\s/);
+const isNumber = str => str.length > 0 && Array.from(str).reduce((prev, ch) => prev === undefined ? isStartNum(ch, str) : isPartNum(ch), undefined);
 
 const hasOperation = (token) => operationsByArity.reduce(
     (result, array) => result ? true : token in array,
@@ -245,12 +303,12 @@ const hasOperation = (token) => operationsByArity.reduce(
 const getOperationArgs = (operation, stack, start, arity) =>
     arity === 0 ?
         new operation() :
-        new operation(...stack.splice(start, start, start + arity));
+        new operation(...stack.splice(start, arity));
 
 const getOperation = (token, stack) => operationsByArity.reduce(
     (result, array, index) =>
         token in array ?
-            getOperationArgs(array[token], stack, index - stack.length, stack.length) :
+            getOperationArgs(array[token], stack, stack.length - index, index) :
             result,
     undefined
 );
@@ -265,87 +323,195 @@ const parse = str =>
         return stack;
     }, []).pop();
 
+/***
+ * Homework #8
+ ***/
+
+const sumexp = (...args) => args.reduce((prev, x) => prev + Math.exp(x), 0);
+
+const Sumexp = NAryOp("Sumexp")(
+    sumexp,
+    'sumexp',
+    function(name) {
+        return this.args.map(expr => new Multiply(expr.diff(name), new Power(Const.E, expr))).reduce(
+            (prev, expr) => new Add(prev, expr), Const.ZERO);
+    }
+);
+const Softmax = NAryOp("Softmax")(
+    (...args) => Math.exp(args[0]) / sumexp(...args),
+    'softmax',
+    function(name) {
+        return new Divide(new Power(Const.E, this.args[0]), new Sumexp(...this.args)).diff(name);
+    }
+);
+
+const nAryOperations = {
+    "sumexp": Sumexp,
+    "softmax": Softmax
+};
+
+const hasOperationExt = (operation) => operation in nAryOperations || hasOperation(operation);
+const hasOperationExtN = (operation, arity) => operation in nAryOperations ?
+    true :
+    arity < operationsByArity.length && operation in operationsByArity[arity];
+const getOperationExt = (operation, stack) =>
+    operation in nAryOperations ?
+        getOperationArgs(nAryOperations[operation], stack, 0, stack.length) :
+        getOperation(operation, stack);
+
 const parser = (function () {
+    function _error(creator, message) {
+        return creator(this.at, message);
+    }
+    function _expect(creator, message, condition) {
+        if (!condition) {
+            throw this.error(creator, message);
+        }
+    }
+    function _expectLastToken(message, condition) {
+        if (!condition(this.lastToken)) {
+            throw this.error(unexpectedTokenCreator(this.lastToken), message);
+        }
+    }
     const ParserError = inheritedWithMatchingConstructor(
         Object, "ParserError", doNothing,
-        function(at, message) {
+        function (at, message) {
             this.at = at;
             this.message = "Cannot parse expression at " + at + ": " + message;
         }
     );
-
-    const SpecificParserError = (name, fieldFiller) => inheritedWithMatchingConstructor(
-        ParserError, name, doNothing(), fieldFiller
+    const SpecificParserError = (name, args2parent, fieldFiller) => inheritedWithMatchingConstructor(
+        ParserError, name, doNothing(), fieldFiller, args2parent
     );
-
     const UnexpectedTokenError = SpecificParserError(
         "UnexpectedTokenError",
+        (at, message, token = "") => [at, "unexpected token" + (token === "" ? "" : " '" + token + "'") + ": " + message],
         function (at, message, token) {
             this.token = token;
         }
     );
+    const unexpectedTokenCreator = token => (at, message) => new UnexpectedTokenError(at, message, token === null ? "<end of expression>" : token);
+    const UnrecognizedTokenError = SpecificParserError(
+        "UnrecognizedTokenError",
+        (at, message, token = "") => [at, "unrecognized token" + (token === "" ? "" : " '" + token + "'") + ": " + message],
+        function (at, message, token) {
+            this.token = token;
+        }
+    );
+    const unrecognizedTokenCreator = (token = "") => (at, message) => new UnrecognizedTokenError(at, message, token);
 
-    const getValueToken = token => {
-        if (checkToken(token, isStartNum, isPartNum)) {
-            return new Const(+token);
+    function _skipWs() {
+        while (this.at < this.str.length && isWhitespace(this.str[this.at])) {
+            this.at++;
         }
-        else if (checkToken(token, isStartName, isPartName) && token in varName2indexMap) {
-            return new Variable(token);
+    }
+    function _read(isPart) {
+        let last = this.str[this.at];
+        const begin = this.at++;
+        while (this.at < this.str.length && isPart(this.str[this.at], last)) {
+            last = this.str[this.at++];
         }
-        throw new Error();
-    };
-    const getOperationArgsGlued = args => {
-        if (args.length >= 4 && args[0] === '(' && args[args.length - 1] === ')' &&
-            args.length - 3 < operationsByArity.length &&
-            args[1] in operationsByArity[args.length - 3]) {
-            return getOperationArgs(operationsByArity[args.length - 3][args[1]], args, 2, args.length - 3);
-        }
-        throw new Error();
-    };
-    const parsePrefixTokens = tokens =>
-        getOperationArgsGlued(tokens.reduceRight((args, current, index, array) => {
-            current = current.trim();
-            if (args.length > 0 && args[args.length - 1] === ')') {
-                return args;
+        return this.str.substring(begin, this.at);
+    }
+    function _nextToken() {
+        this.skipWs();
+        if (this.at === this.str.length) {
+            this.lastToken = null;
+        } else {
+            const token = this.read((x, prev) => !isWhitespace(x) && x !== '(' && x !== ')' && prev !== ')' && prev !== '(');
+            if (isNumber(token)) {
+                this.lastToken = new Const(+token);
+            } else if (token in varName2indexMap) {
+                this.lastToken = new Variable(token);
+            } else {
+                this.expect(unrecognizedTokenCreator(token), "no variable/function with this name",
+                    hasOperationExt(token) || token === '(' || token === ')');
+                this.lastToken = token;
             }
-            if (args.length === 0 && current !== '(') {
-                throw new Error();
-            }
-            if (args.length <= 1 || current === ')') {
+        }
+        return this.lastToken;
+    }
+    function _getOperationArgsGlued(operation, args) {
+        this.expect(
+            unrecognizedTokenCreator(operation), "cannot find operation " + operation + " taking " + args.length + " arguments",
+            hasOperationExtN(operation, args.length)
+        );
+        return getOperationExt(operation, args);
+    }
+    function _parseArgs(recurse, breakWhen) {
+        const args = [];
+        let current;
+        while ((current = this.nextToken()) !== null && !breakWhen(current)) {
+            if (current === '(') {
+                args.push(recurse(breakWhen));
+                this.expectLastToken("expected closing parenthesis", t => t === ')');
+            } else {
+                this.expectLastToken("expected number or variable", t => t instanceof Const || t instanceof Variable);
                 args.push(current);
             }
-            else if (current === '(') {
-                args.push(parsePrefixTokens(array));
-            } else {
-                args.push(getValueToken(current));
-            }
-            if (current !== ')') {
-                array.pop();
-            }
-            return args;
-        }, []));
-    return {
-        parsePrefix: str => {
-            const tokens = str.trim().split(
-                /\s+|(?<=[\(\)])|(?=[\(\)])/
-            );
-            if (tokens[0] === '(') {
-                const res = parsePrefixTokens(tokens.reverse());
-                if (tokens.length !== 1) {
-                    throw new Error();
-                }
-                return res;
-            } else {
-                if (tokens.length !== 1) {
-                    throw new Error();
-                }
-                return getValueToken(tokens[0]);
-            }
         }
+        return args;
+    }
+    const isOperation = str => typeof str === 'string' && str !== '(' && str !== ')';
+    function _parseOperation(readToken) {
+        const operation = readToken === undefined ? this.nextToken(true) : readToken;
+        this.expectLastToken("expected operation", t => isOperation(t));
+        return operation;
+    }
+    function _parse_fixTokens(isPostfix = false) {
+        let operation, args;
+        if (!isPostfix) {
+            operation = this.parseOperation();
+            args = this.parseArgs(this.parse_fixTokens.bind(this, isPostfix), x => x === ')');
+        } else {
+            args = this.parseArgs(this.parse_fixTokens.bind(this, isPostfix), x => isOperation(x) || x === ')');
+            operation = this.parseOperation(this.lastToken);
+            this.nextToken();
+        }
+        this.expectLastToken("expected closing parenthesis", t => t === ')');
+        return this.getOperationArgsGlued(operation, args);
+    }
+
+    const parserCreator = function(input) {
+        return {
+            str: input,
+            at: 0,
+            skipWs: _skipWs,
+            read: _read,
+            nextToken: _nextToken,
+            getOperationArgsGlued: _getOperationArgsGlued,
+            parseOperation: _parseOperation,
+            parseArgs: _parseArgs,
+            parse_fixTokens: _parse_fixTokens,
+            error: _error,
+            expect: _expect,
+            expectLastToken: _expectLastToken
+        };
+    };
+
+    function parse_fix(input, isPostfix) {
+        const parser = parserCreator(input);
+
+        const first = parser.nextToken();
+        let res;
+        if (first === '(') {
+            res = parser.parse_fixTokens(isPostfix);
+        } else {
+            parser.expectLastToken("expected '(', number or variable", t => t instanceof Const || t instanceof Variable);
+            res = first;
+        }
+        parser.nextToken();
+        parser.expectLastToken("expected end of expression", t => t === null);
+        return res;
+    }
+
+    return {
+        ParserError: ParserError,
+        UnexpectedTokenError: UnexpectedTokenError,
+        parsePrefix: str => parse_fix(str, false),
+        parsePostfix: str => parse_fix(str, true)
     };
 })();
 
 const parsePrefix = parser.parsePrefix;
-
-let exprr = parsePrefix("(- 3 y )");
-console.log(exprr.prefix());
+const parsePostfix = parser.parsePostfix;
