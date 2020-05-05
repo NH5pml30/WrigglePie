@@ -96,6 +96,8 @@ int main()
   {
     auto [stt, id] = states.top();
     states.pop();
+    if ((stt & term).any())
+      new_term.insert(id);
     for (char ch = 'a'; ch <= 'z'; ch++)
     {
       state_t next_stt;
@@ -108,11 +110,7 @@ int main()
         auto [next_id, is_new_state] = get_state_id(next_stt);
         new_transitions[id][ch - 'a'] = next_id + 1;
         if (is_new_state)
-        {
-          if ((next_stt & term).any())
-            new_term.insert(next_id);
           states.push({next_stt, next_id});
-        }
       }
     }
   }
