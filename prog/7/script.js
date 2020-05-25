@@ -1,3 +1,10 @@
+// :NOTE: strict mode is switched off
+// :NOTE 2: still be
+/* Review */
+
+"use strict";
+
+
 function Expression() {
 }
 Expression.prototype.simplify = function() { return this; };
@@ -20,25 +27,30 @@ function inheritedWithMatchingConstructor(parent, name, prototypeFiller = doNoth
     return Res;
 }
 
-const Const = inheritedWithMatchingConstructor(
-    Expression, "Const",
-    function(proto) {
-        proto.evaluate = function(...varVals) {
-            return this.value;
-        };
-        proto.toString = function() {
-            return this.value.toString();
-        };
-        proto.diff = function(name) {
-            return Const.ZERO;
-        };
-        proto.simplify = function(level) {
-            return level === 0 ? this.value : this;
-        };
-        proto.prefix = proto.toString;
+// :NOTE: copy-pasted code for Const and Variable (at least passage of `Expression`, `proto.prefix = proto.toString`, ...)
+function createValue(name, evaluate, toString, diff, fieldFiller, simplify = Expression.prototype.simplify) {
+    return inheritedWithMatchingConstructor(Expression, name,
+        function(proto) {
+            proto.evaluate = evaluate;
+            proto.diff = diff;
+            proto.simplify = simplify;
+            proto.prefix = proto.postfix = proto.toString = toString;
+        }, fieldFiller);
+}
+
+const Const = createValue("Const",
+    function(...varVals) {
+        return this.value;
     },
+    function() {
+        return this.value.toString();
+    },
+    name => Const.ZERO,
     function(cnst) {
         this.value = cnst;
+    },
+    function(level) {
+        return level === 0 ? this.value : this;
     }
 );
 Const.E = new Const(Math.E);
@@ -51,19 +63,15 @@ const varName2indexMap = {
     "y": 1,
     "z": 2
 };
-const Variable = inheritedWithMatchingConstructor(
-    Expression, "Variable",
-    function(proto) {
-        proto.evaluate = function(...varVals) {
-            return varVals[varName2indexMap[this.name]];
-        };
-        proto.toString = function() {
-            return this.name;
-        };
-        proto.diff = function(name) {
-            return name === this.name ? Const.ONE : Const.ZERO;
-        };
-        proto.prefix = proto.toString;
+const Variable = createValue("Variable",
+    function(...varVals) {
+        return varVals[varName2indexMap[this.name]];
+    },
+    function() {
+        return this.name;
+    },
+    function(name) {
+        return name === this.name ? Const.ONE : Const.ZERO;
     },
     function(name) {
         this.name = name;
@@ -84,7 +92,7 @@ function defaultOperationSimplify() {
 
 const Operation = inheritedWithMatchingConstructor(Expression, "Operation");
 
-const NAryOp = (name) => (operation, symbol, diff, simplify = Expression.prototype.simplify) =>
+const NAryOp = (name, operation, symbol, diff, simplify = Expression.prototype.simplify) =>
     inheritedWithMatchingConstructor(Operation, name,
         function(proto) {
             proto.operation = operation;
@@ -93,14 +101,14 @@ const NAryOp = (name) => (operation, symbol, diff, simplify = Expression.prototy
                     ...this.args.map(x => x.evaluate(...varVals))
                 );
             };
-            proto.argsToString = function(stringifier) {
-                return this.args.reduce(
+            proto.argsToString = function(prefix, isPostfix, postfix, extPrefix, extPostfix) {
+                return prefix + this.args.reduce(
                     (str, x, ind) =>
-                        str + (ind === 0 ? '' : ' ') + stringifier(x), ""
-                );
+                        str + (ind === 0 ? '' : ' ') + (isPostfix ? x.postfix : x.prefix).bind(x)(extPrefix, extPostfix), ""
+                ) + postfix;
             };
             proto.toString = function() {
-                return this.argsToString(x => x.toString()) + ' ' + symbol;
+                return this.postfix('', '');
             };
             proto.diff = diff;
             proto.simplify = function() {
@@ -115,26 +123,31 @@ const NAryOp = (name) => (operation, symbol, diff, simplify = Expression.prototy
                     x => x instanceof Const ? x.value : undefined
                 );
             };
-            proto.prefix = function() {
-                return '(' + symbol + ' ' + this.argsToString(x => x.prefix()) + ')';
-            }
+            proto.prefix = function(prefix = '(', postfix = ')') {
+                return this.argsToString(prefix + symbol + ' ', false, postfix, prefix, postfix);
+            };
+            proto.postfix = function(prefix = '(', postfix = ')') {
+                return this.argsToString(prefix, true, ' ' + symbol + postfix, prefix, postfix);
+            };
         },
         function(...args) {
             this.args = args.slice(0);
         }
     );
 
-const BinaryOp = name => NAryOp(name);
-const UnaryOp = name => NAryOp(name);
+const BinaryOp = NAryOp;
+const UnaryOp = NAryOp;
 
-const Negate = UnaryOp("Negate")(
+// :NOTE: the second call `UnaryOp (...)--->()<---` is not required by JS. If it's removed code still be compiling but logic lost.
+// User can forget to call this method
+const Negate = UnaryOp("Negate",
     x => -x,
     'negate',
     function(name) {
-            return new Negate(this.args[0].diff(name));
+        return new Negate(this.args[0].diff(name));
     }
 );
-const Square = UnaryOp("Square")(
+const Square = UnaryOp("Square",
     x => x * x,
     'sqr',
     function(name) {
@@ -142,7 +155,7 @@ const Square = UnaryOp("Square")(
     }
 );
 
-const Add = BinaryOp("Add")(
+const Add = BinaryOp("Add",
     (x, y) => x + y,
     '+',
     function(name) {
@@ -158,7 +171,7 @@ const Add = BinaryOp("Add")(
         return this;
     }
 );
-const Subtract = BinaryOp("Subtract")(
+const Subtract = BinaryOp("Subtract",
     (x, y) => x - y,
     '-',
     function(name) {
@@ -171,7 +184,7 @@ const Subtract = BinaryOp("Subtract")(
         return this;
     }
 );
-const Multiply = BinaryOp("Multiply")(
+const Multiply = BinaryOp("Multiply",
     (x, y) => x * y,
     '*',
     function(name) {
@@ -193,7 +206,7 @@ const Multiply = BinaryOp("Multiply")(
         return this;
     }
 );
-const Divide = BinaryOp("Divide")(
+const Divide = BinaryOp("Divide",
     (x, y) => x / y,
     '/',
     function(name) {
@@ -215,7 +228,7 @@ const Divide = BinaryOp("Divide")(
         return this;
     }
 );
-const Power = BinaryOp("Power")(
+const Power = BinaryOp("Power",
     (x, y) => Math.pow(x, y),
     'pow',
     function(name) {
@@ -243,7 +256,7 @@ const Power = BinaryOp("Power")(
         return this;
     }
 );
-const Log = BinaryOp("Logarithm")(
+const Log = BinaryOp("Logarithm",
     (x, y) => Math.log(Math.abs(y)) / Math.log(Math.abs(x)),
     'log',
     function(name) {
@@ -329,7 +342,7 @@ const parse = str =>
 
 const sumexp = (...args) => args.reduce((prev, x) => prev + Math.exp(x), 0);
 
-const Sumexp = NAryOp("Sumexp")(
+const Sumexp = NAryOp("Sumexp",
     sumexp,
     'sumexp',
     function(name) {
@@ -337,7 +350,7 @@ const Sumexp = NAryOp("Sumexp")(
             (prev, expr) => new Add(prev, expr), Const.ZERO);
     }
 );
-const Softmax = NAryOp("Softmax")(
+const Softmax = NAryOp("Softmax",
     (...args) => Math.exp(args[0]) / sumexp(...args),
     'softmax',
     function(name) {
@@ -359,20 +372,7 @@ const getOperationExt = (operation, stack) =>
         getOperationArgs(nAryOperations[operation], stack, 0, stack.length) :
         getOperation(operation, stack);
 
-const parser = (function () {
-    function _error(creator, message) {
-        return creator(this.at, message);
-    }
-    function _expect(creator, message, condition) {
-        if (!condition) {
-            throw this.error(creator, message);
-        }
-    }
-    function _expectLastToken(message, condition) {
-        if (!condition(this.lastToken)) {
-            throw this.error(unexpectedTokenCreator(this.lastToken), message);
-        }
-    }
+const source = (function() {
     const ParserError = inheritedWithMatchingConstructor(
         Object, "ParserError", doNothing,
         function (at, message) {
@@ -390,7 +390,7 @@ const parser = (function () {
             this.token = token;
         }
     );
-    const unexpectedTokenCreator = token => (at, message) => new UnexpectedTokenError(at, message, token === null ? "<end of expression>" : token);
+    const unexpectedTokenCreator = token => (at, message) => new UnexpectedTokenError(at, message, token || "<end of expression>");
     const UnrecognizedTokenError = SpecificParserError(
         "UnrecognizedTokenError",
         (at, message, token = "") => [at, "unrecognized token" + (token === "" ? "" : " '" + token + "'") + ": " + message],
@@ -398,118 +398,176 @@ const parser = (function () {
             this.token = token;
         }
     );
-    const unrecognizedTokenCreator = (token = "") => (at, message) => new UnrecognizedTokenError(at, message, token);
+    const unrecognizedTokenCreator = (token = "") => (at, message) => new UnrecognizedTokenError(at, message, token || "<end of expression>");
 
-    function _skipWs() {
-        while (this.at < this.str.length && isWhitespace(this.str[this.at])) {
-            this.at++;
-        }
+    function Source(input) {
+        this._str = input;
+        this._at = 0;
+        this.expect((at, message) => new ParserError(at, message), "Empty source string", input !== "");
+        this.lastToken = null;
+        const id = this._parseIdentifier.bind(this), co = this._parseConst.bind(this);
+        this.valueParsers = [co, id];
+        this.funcParsers = [id];
+        this.allParsers = [...this.valueParsers, ...this.funcParsers].filter((it, ind, obj) => obj.indexOf(it) === ind);
     }
-    function _read(isPart) {
-        let last = this.str[this.at];
-        const begin = this.at++;
-        while (this.at < this.str.length && isPart(this.str[this.at], last)) {
-            last = this.str[this.at++];
+    Source.prototype.error = function(creator, message) {
+        return creator(this._at, message);
+    };
+    Source.prototype.expect = function(creator, message, condition) {
+        if (!condition) {
+            throw this.error(creator, message);
         }
-        return this.str.substring(begin, this.at);
-    }
-    function _nextToken() {
+    };
+    Source.prototype.expectToken = function(message, token, condition) {
+        if (!condition(token)) {
+            throw this.error(unexpectedTokenCreator(token), message);
+        }
+    };
+    Source.prototype.expectEnd = function() {
+        const token = this._at < this._str.length ? this._str.substring(this._at) : this.lastToken;
+        if (token) {
+            throw this.error(unexpectedTokenCreator(token), "Expected end of expression");
+        }
+    };
+    Source.prototype.getChar = function(pos = this._at) {
+        return this._str[pos];
+    };
+    Source.prototype.testChar = function(pred) {
+        if (this._at < this._str.length && pred(this.getChar())) {
+            this._at++;
+            return true;
+        }
+        return false;
+    };
+    Source.prototype.expectChar = function(pred, message) {
+        if (!this.testChar(pred)) {
+            throw this.error(unexpectedTokenCreator(this.getChar()), message);
+        }
+    };
+    Source.prototype.skipWs = function() {
+        while (this._at < this._str.length && isWhitespace(this.getChar())) {
+            this._at++;
+        }
+        return this;
+    };
+    Source.prototype._readWhile = function(isStart, isPart) {
+        if (!isStart(this.getChar())) {
+            return null;
+        }
+        const begin = this._at;
+        let end = this._at + 1;
+        while (end < this._str.length && isPart(this.getChar(end))) {
+            end++;
+        }
+        return this._str.substring(begin, end);
+    };
+    Source.prototype._readRegex = function(regex) {
+        regex.lastIndex = this._at;
+        const res = this._str.match(regex);
+        return res ? res[0] : null;
+    };
+    Source.prototype._commitToken = function(token) {
+        if (token !== null) {
+            this._at += token.length;
+        }
+        return token;
+    };
+    const constRegexp = /[+\-]?\d+(?:\.\d+)?(?=(?:\)|\(|\s|$))/y;
+    Source.prototype._parseConst = function() {
+        const token = this._commitToken(this._readRegex(constRegexp));
+        if (!token) { return null; }
+        return new Const(+token);
+    };
+    Source.prototype._parseIdentifier = function() {
+        const token = this._commitToken(this._readWhile(
+            x => !isWhitespace(x) && !isDigit(x) && x !== '(' && x !== ')',
+            x => !isWhitespace(x) && x !== '(' && x !== ')'
+        ));
+        if (!token) { return null; }
+        this.expectToken("no variable/function with this name", token, token => token in varName2indexMap || hasOperationExt(token));
+        return token in varName2indexMap ? new Variable(token) : token;
+    };
+    Source.prototype.parseSomething = function(readToken, parsers, checker, message) {
         this.skipWs();
-        if (this.at === this.str.length) {
-            this.lastToken = null;
-        } else {
-            const token = this.read((x, prev) => !isWhitespace(x) && x !== '(' && x !== ')' && prev !== ')' && prev !== '(');
-            if (isNumber(token)) {
-                this.lastToken = new Const(+token);
-            } else if (token in varName2indexMap) {
-                this.lastToken = new Variable(token);
-            } else {
-                this.expect(unrecognizedTokenCreator(token), "no variable/function with this name",
-                    hasOperationExt(token) || token === '(' || token === ')');
-                this.lastToken = token;
-            }
+        if (readToken === undefined) {
+            this.lastToken = readToken = parsers.reduce((prev, cur) => prev ? prev : cur(), null);
         }
-        return this.lastToken;
-    }
-    function _getOperationArgsGlued(operation, args) {
-        this.expect(
-            unrecognizedTokenCreator(operation), "cannot find operation " + operation + " taking " + args.length + " arguments",
+        this.expectToken(message, readToken, checker);
+        return readToken;
+    };
+
+    return {
+        Source: Source,
+        ParserError: ParserError,
+        UnexpectedTokenError: UnexpectedTokenError,
+        UnrecognizedTokenError: UnrecognizedTokenError,
+        unexpectedTokenCreator: unexpectedTokenCreator,
+        unrecognizedTokenCreator: unrecognizedTokenCreator
+    };
+})();
+
+// :NOTE: too many code for parser. The limit is 50-60 lines of code (without blaank lines)
+const parser = (function () {
+    const isOperation = str => typeof str === 'string' && str !== '(' && str !== ')';
+    const isValue = token => token instanceof Const || token instanceof Variable;
+
+    const Parser = function(input) {
+        this.source = new source.Source(input);
+        this._tryReadValue();
+    };
+    Parser.prototype._nextToken = function(readToken) {
+        return this.source.parseSomething(readToken, this.source.allParsers, () => true)
+    };
+    Parser.prototype._parseOperation = function(readToken) {
+        return this.source.parseSomething(readToken, this.source.funcParsers, isOperation, "expected operation");
+    };
+    Parser.prototype._tryReadValue = function() {
+        return this.source.parseSomething(undefined, this.source.valueParsers, () => true);
+    };
+    Parser.prototype._parseTokens = function(recur, level = 0) {
+        level || this._tryReadValue();
+        let current = recur();
+        return current ? [current, ...this._parseTokens(recur, 1)] : [];
+    };
+    Parser.prototype._shiftToken = function() {
+        const res = this.source.lastToken;
+        this._nextToken();
+        return res;
+    };
+    Parser.prototype._getOperationArgsGlued = function(operation, args) {
+        this.source.expect(
+            source.unrecognizedTokenCreator(operation), "cannot find operation " + operation + " taking " + args.length + " arguments",
             hasOperationExtN(operation, args.length)
         );
         return getOperationExt(operation, args);
-    }
-    function _parseArgs(recurse, breakWhen) {
-        const args = [];
-        let current;
-        while ((current = this.nextToken()) !== null && !breakWhen(current)) {
-            if (current === '(') {
-                args.push(recurse(breakWhen));
-                this.expectLastToken("expected closing parenthesis", t => t === ')');
-            } else {
-                this.expectLastToken("expected number or variable", t => t instanceof Const || t instanceof Variable);
-                args.push(current);
-            }
-        }
-        return args;
-    }
-    const isOperation = str => typeof str === 'string' && str !== '(' && str !== ')';
-    function _parseOperation(readToken) {
-        const operation = readToken === undefined ? this.nextToken(true) : readToken;
-        this.expectLastToken("expected operation", t => isOperation(t));
-        return operation;
-    }
-    function _parse_fixTokens(isPostfix = false) {
-        let operation, args;
-        if (!isPostfix) {
-            operation = this.parseOperation();
-            args = this.parseArgs(this.parse_fixTokens.bind(this, isPostfix), x => x === ')');
-        } else {
-            args = this.parseArgs(this.parse_fixTokens.bind(this, isPostfix), x => isOperation(x) || x === ')');
-            operation = this.parseOperation(this.lastToken);
-            this.nextToken();
-        }
-        this.expectLastToken("expected closing parenthesis", t => t === ')');
-        return this.getOperationArgsGlued(operation, args);
-    }
-
-    const parserCreator = function(input) {
-        return {
-            str: input,
-            at: 0,
-            skipWs: _skipWs,
-            read: _read,
-            nextToken: _nextToken,
-            getOperationArgsGlued: _getOperationArgsGlued,
-            parseOperation: _parseOperation,
-            parseArgs: _parseArgs,
-            parse_fixTokens: _parse_fixTokens,
-            error: _error,
-            expect: _expect,
-            expectLastToken: _expectLastToken
-        };
     };
+    Parser.prototype.parseExpr = function(isPostfix = false) {
+        let operation, args;
+        if (isValue(this.source.lastToken)) {
+            return this._shiftToken();
+        } else if (!this.source.lastToken && this.source.testChar(x => x === '(')) {
+            isPostfix || (operation = this._parseOperation());
+            args = this._parseTokens(this.parseExpr.bind(this, isPostfix));
+            !isPostfix || (operation = this._parseOperation(this._shiftToken()));
+            this.source.expectToken("expected closing parenthesis", this.source.lastToken, token => !token);
+            this.source.skipWs().expectChar(ch => ch === ')', "expected closing parenthesis");
+            this._nextToken();
+            return this._getOperationArgsGlued(operation, args);
+        }
+        return null;
+    };
+    Parser.prototype.checkEnd = function() { this.source.expectEnd(); };
 
     function parse_fix(input, isPostfix) {
-        const parser = parserCreator(input);
-
-        const first = parser.nextToken();
-        let res;
-        if (first === '(') {
-            res = parser.parse_fixTokens(isPostfix);
-        } else {
-            parser.expectLastToken("expected '(', number or variable", t => t instanceof Const || t instanceof Variable);
-            res = first;
-        }
-        parser.nextToken();
-        parser.expectLastToken("expected end of expression", t => t === null);
+        const parser = new Parser(input);
+        const res = parser.parseExpr(isPostfix);
+        parser.checkEnd();
         return res;
     }
 
     return {
-        ParserError: ParserError,
-        UnexpectedTokenError: UnexpectedTokenError,
-        parsePrefix: str => parse_fix(str, false),
-        parsePostfix: str => parse_fix(str, true)
+        parsePrefix: str => parse_fix(str.trim(), false),
+        parsePostfix: str => parse_fix(str.trim(), true)
     };
 })();
 
