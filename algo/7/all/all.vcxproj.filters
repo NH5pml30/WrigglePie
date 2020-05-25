@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="windows.cpp">
+    <ClCompile Include="2d_queries.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
