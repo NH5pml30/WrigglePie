@@ -1,0 +1,10 @@
+8 A
+A -> BB
+A -> CD
+B -> BB
+B -> CD
+C -> a
+D -> BE
+D -> b
+E -> b
+abaabb
