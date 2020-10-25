@@ -1,2 +1,0 @@
-K:\Repo\discr\auto\Debug\auto.exe
-K:\Repo\discr\auto\Debug\auto.pdb
