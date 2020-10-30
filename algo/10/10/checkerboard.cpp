@@ -214,15 +214,15 @@ class bipartite_graph : public graph<NODE_DATA, EDGE_DATA> {
 
   template<class EdgeIter>
   class bi_edge_supplier
-      : typename base::base_graph_iterator<decltype(*std::declval<EdgeIter>), bipartite_graph> {
+      : base::template base_graph_iterator<decltype(*std::declval<EdgeIter>), bipartite_graph> {
    private:
     using edge_t = decltype(*std::declval<EdgeIter>());
-    using base_t = typename base::base_graph_iterator<edge_t, bipartite_graph>;
+    using base_t = typename base::template base_graph_iterator<edge_t, bipartite_graph>;
     EdgeIter data;
 
    public:
     bi_edge_supplier(EdgeIter data, int begin = 0) : base_t(begin), data(data) {}
-    auto invoke() const override {
+    edge_t invoke() const override {
       auto res = *data;
       std::get<1>(res) += base_t::enclosing->n1;
       return res;
@@ -315,52 +315,6 @@ using NODE_DATA_T = empty;
 using EDGE_DATA_T = empty;
 
 using graph_t = bipartite_graph<NODE_DATA_T, EDGE_DATA_T>;
-
-std::tuple<graph_t, int> read_graph(std::istream &in) {
-  int n, m;
-  in >> m >> n;
-
-  struct edge_outer_supplier : supplier_iterator<std::pair<int, int>> {
-    struct reader_supplier : supplier_iterator<int> {
-      mutable int data = -1;
-
-      using supplier_iterator<int>::supplier_iterator;
-      void read_data() const {
-        std::cin >> data;
-      }
-      int invoke() const override {
-        if (data == -1)
-          read_data();
-        return data;
-      }
-      void increment() override {
-        data = -1;
-      }
-    } cur, end;
-    int from;
-
-    using supplier_iterator<std::pair<int, int>>::supplier_iterator;
-
-    std::pair<int, int> invoke() const override {
-      return {from, *cur};
-    }
-    void increment() override {
-      ++cur;
-      if (cur == end) {
-        from++;
-        int ki;
-        std::cin >> ki;
-        cur = reader_supplier();
-        end = reader_supplier(ki);
-      }
-    }
-    bool operator==(const edge_outer_supplier &other) const {
-      return base_t::operator==(other) && from == other.from && cur == other.cur;
-    }
-  };
-
-  return {graph_t(m, n, edge_outer_iterator(0), edges.end()), m};
-}
 
 int main() {
   int n, m;

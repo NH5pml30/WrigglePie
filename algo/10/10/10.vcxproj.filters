@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="checkerboard.cpp">
+    <ClCompile Include="euler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
