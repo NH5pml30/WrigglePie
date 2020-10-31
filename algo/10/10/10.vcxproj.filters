@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="euler.cpp">
+    <ClCompile Include="pathcover.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
