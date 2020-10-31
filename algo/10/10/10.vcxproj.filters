@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pathcover.cpp">
+    <ClCompile Include="code.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
