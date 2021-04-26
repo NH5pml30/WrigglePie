@@ -1,2 +1,0 @@
-K:\Repo\discr\hw\bruteforce\Debug\bruteforce.exe
-K:\Repo\discr\hw\bruteforce\Debug\bruteforce.pdb

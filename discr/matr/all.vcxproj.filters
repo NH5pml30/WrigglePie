@@ -15,12 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="g6storage.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="topo.cpp">
+    <ClCompile Include="g.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
