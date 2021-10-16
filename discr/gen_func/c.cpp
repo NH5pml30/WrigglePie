@@ -227,31 +227,40 @@ void divide(const polynom<type> &lhs, const polynom<type> &rhs, polynom<type> &r
   std::generate(res.begin(), res.end(), [&, i = (size_t)0]() mutable {
     ++i;
     return (type(i > lhs.size() ? 0 : lhs[i - 1]) -
-            convolve(res.begin(), res.end(), rhs.begin(), rhs.end(), i)) /*
-           rhs[0]*/;
+            convolve(res.begin(), res.end(), rhs.begin(), rhs.end(), i)) /
+           rhs[0];
   });
 }
 
+template<typename type>
+std::pair<polynom<type>, polynom<type>> compute_pq(const std::vector<type> &recur_start, const std::vector<type> &recur_coefs)
+{
+  polynom<type> p, q = {1};
+  std::transform(recur_coefs.begin(), recur_coefs.end(), std::back_inserter(q), std::negate<>());
+  std::transform(recur_start.begin(), recur_start.end(), std::back_inserter(p),
+                 [&, i = size_t{0}](type ai) mutable {
+                   return ai - convolve(recur_coefs.begin(), recur_coefs.end(), recur_start.begin(),
+                                        recur_start.begin() + i, i++);
+                 });
+  return {std::move(normalize(p)), std::move(normalize(q))};
+}
+
 int main() {
-  using poly_t = polynom<mod_int_t>;
+  using poly_t = polynom<int64_t>;
 
-  int n, m;
-  std::cin >> n >> m;
+  int k;
+  std::cin >> k;
 
-  poly_t P(n + 1), Q(m + 1);
-  for (auto &el : P)
-    std::cin >> el;
-  for (auto &el : Q)
+  std::vector<int64_t> a(k);
+  for (auto &el : a)
     std::cin >> el;
 
-  auto sum = P + Q;
-  std::cout << sum.size() - 1 << '\n' << sum << '\n';
+  std::vector<int64_t> c(k);
+  for (auto &el : c)
+    std::cin >> el;
 
-  auto prod = P * Q;
-  std::cout << prod.size() - 1 << '\n' << P * Q << '\n';
+  auto [p, q] = compute_pq(a, c);
 
-  poly_t quotient(1000);
-  divide(P, Q, quotient);
-  std::cout << quotient << std::endl;
+  std::cout << p.size() - 1 << '\n' << p << '\n' << q.size() - 1 << '\n' << q << std::endl;
   return 0;
 }

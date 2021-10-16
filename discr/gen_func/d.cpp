@@ -1,6 +1,7 @@
 /* Nikolai Kholiavin, M3238 */
 #include <type_traits>
 #include <vector>
+#include <deque>
 #include <iostream>
 #include <functional>
 #include <algorithm>
@@ -114,7 +115,7 @@ std::ostream &operator<<(std::ostream &o, modular_number<type, mod> &n)
 using mod_int_t = modular_number<int64_t, 998'244'353>;
 
 template<typename type>
-using polynom = std::vector<type>;
+using polynom = std::deque<type>;
 
 template<typename type>
 polynom<type> &normalize(polynom<type> &poly)
@@ -199,20 +200,33 @@ polynom<type> operator*(type lhs, const polynom<type> &rhs)
                  [=](type el) { return el * lhs; });
   return res;
 }
-
 template<typename type>
 polynom<type> operator*(const polynom<type> &lhs, type rhs)
 {
   return operator*(rhs, lhs);
 }
-
 template<typename type>
 polynom<type> &operator*=(polynom<type> &lhs, type rhs)
 {
+  std::transform(lhs.begin(), lhs.end(), lhs.begin(),
+                 [=](type el) { return el * rhs; });
+  return lhs;
+}
+
+template<typename type>
+polynom<type> operator/(const polynom<type> &lhs, type rhs)
+{
   polynom<type> res;
-  std::transform(rhs.begin(), rhs.end(), rhs.begin(),
-                 [=](type el) { return el * lhs; });
+  std::transform(rhs.begin(), rhs.end(), std::back_inserter(res),
+                 [=](type el) { return el / rhs; });
   return res;
+}
+template<typename type>
+polynom<type> &operator/=(polynom<type> &lhs, type rhs)
+{
+  std::transform(lhs.begin(), lhs.end(), lhs.begin(),
+                 [=](type el) { return el / rhs; });
+  return lhs;
 }
 
 template<typename type>
@@ -227,31 +241,132 @@ void divide(const polynom<type> &lhs, const polynom<type> &rhs, polynom<type> &r
   std::generate(res.begin(), res.end(), [&, i = (size_t)0]() mutable {
     ++i;
     return (type(i > lhs.size() ? 0 : lhs[i - 1]) -
-            convolve(res.begin(), res.end(), rhs.begin(), rhs.end(), i)) /*
-           rhs[0]*/;
+            convolve(res.begin(), res.end(), rhs.begin(), rhs.end(), i)) /
+           rhs[0];
   });
 }
 
+template<typename type>
+struct ratio
+{
+  static_assert(std::is_nothrow_default_constructible_v<type> &&
+                std::is_nothrow_copy_constructible_v<type> &&
+                std::is_nothrow_move_constructible_v<type> &&
+                std::is_nothrow_copy_assignable_v<type> && std::is_nothrow_move_assignable_v<type>);
+
+  type num, denom;
+
+  void normalize() noexcept
+  {
+    if (denom < 0)
+      num *= -1, denom *= -1;
+    type gcd = std::gcd(num, denom);
+    num /= gcd, denom /= gcd;
+  }
+
+  ratio(type num = type(0), type denom = type(1)) noexcept : num(num), denom(denom)
+  {
+    normalize();
+  }
+
+  friend ratio operator+(ratio lhs, ratio rhs) noexcept
+  {
+    type lcm = std::lcm(lhs.denom, rhs.denom);
+    type fac1 = lcm / lhs.denom, fac2 = lcm / rhs.denom;
+    return ratio(fac1 * lhs.num + fac2 * rhs.num, lcm);
+  }
+  ratio &operator+=(ratio rhs) noexcept
+  {
+    return *this = *this + rhs;
+  }
+
+  friend ratio operator-(ratio lhs, ratio rhs) noexcept
+  {
+    return lhs + ratio(rhs.num, rhs.denom);
+  }
+  ratio &operator-=(ratio rhs) noexcept
+  {
+    return *this = *this - rhs;
+  }
+
+  friend ratio operator*(ratio lhs, ratio rhs) noexcept
+  {
+    return ratio(lhs.num * rhs.num, lhs.denom * rhs.denom);
+  }
+  ratio &operator*=(ratio rhs) noexcept
+  {
+    return *this = *this * rhs;
+  }
+
+  friend ratio operator/(ratio lhs, ratio rhs) noexcept
+  {
+    return ratio(lhs.num * rhs.denom, lhs.denom * rhs.num);
+  }
+  ratio &operator/=(ratio rhs) noexcept
+  {
+    return *this = *this / rhs;
+  }
+
+  friend bool operator==(ratio lhs, ratio rhs) noexcept
+  {
+    return lhs.num == rhs.num && lhs.denom == rhs.denom;
+  }
+  friend bool operator!=(ratio lhs, ratio rhs) noexcept
+  {
+    return !operator==(lhs, rhs);
+  }
+};
+
+template<typename type>
+std::ostream &operator<<(std::ostream &o, ratio<type> rhs)
+{
+  return o << rhs.num << '/' << rhs.denom;
+}
+
+template<typename type>
+polynom<type> compute_fn(type r, size_t k, const polynom<type> &p)
+{
+
+  polynom<type> pi, sum = {};
+  auto copy = pi;
+
+  type rpow = 1;
+  for (size_t i = 0; i < p.size(); i++)
+  {
+    pi = {type(p[i]) / rpow};
+    for (size_t j = 0; j < k; j++)
+    {
+      copy = pi;
+      copy.push_front(0);
+      copy *= (type(1) / type(j + 1));
+      pi *= type((ptrdiff_t)(j - i + 1)) / type(j + 1);
+      pi += copy;
+    }
+    sum += pi;
+    rpow *= r;
+  }
+
+  return sum;
+}
+
 int main() {
-  using poly_t = polynom<mod_int_t>;
+  using poly_t = polynom<ratio<int64_t>>;
 
-  int n, m;
-  std::cin >> n >> m;
+  int r, k;
+  std::cin >> r >> k;
 
-  poly_t P(n + 1), Q(m + 1);
-  for (auto &el : P)
-    std::cin >> el;
-  for (auto &el : Q)
-    std::cin >> el;
+  poly_t p(k + 1);
+  for (auto &el : p)
+  {
+    int num;
+    std::cin >> num;
+    el = num;
+  }
+  normalize(p);
 
-  auto sum = P + Q;
-  std::cout << sum.size() - 1 << '\n' << sum << '\n';
+  auto fn = compute_fn<ratio<int64_t>>(r, k, p);
+  fn.resize(k + 1);
 
-  auto prod = P * Q;
-  std::cout << prod.size() - 1 << '\n' << P * Q << '\n';
-
-  poly_t quotient(1000);
-  divide(P, Q, quotient);
-  std::cout << quotient << std::endl;
+  std::cout << '\n' << fn << std::endl;
   return 0;
 }

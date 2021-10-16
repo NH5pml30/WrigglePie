@@ -117,14 +117,6 @@ template<typename type>
 using polynom = std::vector<type>;
 
 template<typename type>
-polynom<type> &normalize(polynom<type> &poly)
-{
-  while (!poly.empty() && poly.back() == type(0))
-    poly.pop_back();
-  return poly;
-}
-
-template<typename type>
 polynom<type> operator+(const polynom<type> &lhs, const polynom<type> &rhs)
 {
   polynom<type> res;
@@ -133,7 +125,9 @@ polynom<type> operator+(const polynom<type> &lhs, const polynom<type> &rhs)
     std::swap(min_size, max_size);
   std::transform(min_size->begin(), min_size->end(), max_size->begin(), std::back_inserter(res), std::plus<>());
   std::copy(max_size->begin() + min_size->size(), max_size->end(), std::back_inserter(res));
-  return normalize(res);
+  while (!res.empty() && res.back() == type(0))
+    res.pop_back();
+  return res;
 }
 
 template<typename type>
@@ -141,7 +135,7 @@ polynom<type> &operator+=(polynom<type> &lhs, const polynom<type> &rhs)
 {
   lhs.resize(std::max(lhs.size(), rhs.size()), type(0));
   std::transform(rhs.begin(), rhs.end(), lhs.begin(), lhs.begin(), std::plus<>());
-  return normalize(lhs);
+  return lhs;
 }
 
 template<typename type>
@@ -152,7 +146,6 @@ std::ostream &operator<<(std::ostream &o, const polynom<type> &poly)
   return o;
 }
 
-// computes sum(i=0,n)(lhs[i] * rhs[n - i] when i, n - i in range)
 template<typename InItl, typename InItr>
 auto convolve(InItl lhs_begin, InItl lhs_end,
               InItr rhs_begin, InItr rhs_end, size_t n_)
@@ -162,14 +155,11 @@ auto convolve(InItl lhs_begin, InItl lhs_end,
   ptrdiff_t
     lhs_size = (ptrdiff_t)(lhs_end - lhs_begin),
     rhs_size = (ptrdiff_t)(rhs_end - rhs_begin),
-    n = (ptrdiff_t)n_,
-    lhs_offb = std::clamp(n - rhs_size, ptrdiff_t{0}, lhs_size),
-    lhs_offe = std::clamp(n, lhs_offb, lhs_size),
-    rhs_offb = std::clamp(rhs_size - (n - lhs_offb), ptrdiff_t{0}, rhs_size);
+    n = (ptrdiff_t)n_;
   return std::transform_reduce(
-    lhs_begin + lhs_offb,
-    lhs_begin + lhs_offe,
-    std::make_reverse_iterator(rhs_end) + rhs_offb,
+    lhs_begin  + std::max(n - rhs_size, ptrdiff_t(0)),
+    lhs_begin  + std::min(n, lhs_size),
+    std::make_reverse_iterator(rhs_end) + std::max(rhs_size - n, ptrdiff_t(0)),
     type(0));
 }
 
@@ -218,7 +208,7 @@ polynom<type> &operator*=(polynom<type> &lhs, type rhs)
 template<typename type>
 void divide(const polynom<type> &lhs, const polynom<type> &rhs, polynom<type> &res)
 {
-  assert(rhs.size() > 0 && rhs[0] != 0);
+  assert(rhs.size() > 0 && rhs[0] > 0);
   // auto lhs_begin = std::find_if(lhs.begin(), lhs.end(), [&](type val) { return val != 0; });
   // auto rhs_begin = std::find_if(rhs.begin(), rhs.end(), [&](type val) { return val != 0; });
 
@@ -227,9 +217,49 @@ void divide(const polynom<type> &lhs, const polynom<type> &rhs, polynom<type> &r
   std::generate(res.begin(), res.end(), [&, i = (size_t)0]() mutable {
     ++i;
     return (type(i > lhs.size() ? 0 : lhs[i - 1]) -
-            convolve(res.begin(), res.end(), rhs.begin(), rhs.end(), i)) /*
-           rhs[0]*/;
+            convolve(res.begin(), res.end(), rhs.begin(), rhs.end(), i)) /
+           rhs[0];
   });
+}
+
+template<typename type, typename CoefMorpher>
+void compute_substitution(const polynom<type> &p, polynom<type> &res, CoefMorpher &&morpher, type init = type(1))
+{
+  assert(p.size() > 0 && p[0] == 0);
+  std::fill(res.begin(), res.end(), type(0));
+
+  type coef = init;
+  polynom<type> powt = {type(1)};
+  for (size_t i = 0; i < res.size();
+       i++, coef = morpher(coef), powt *= p, powt.resize(res.size(), type(0)))
+    res += coef * powt;
+}
+
+template<typename type>
+void sqrt_one_plus_p(const polynom<type> &p, polynom<type> &res)
+{
+  return compute_substitution(p, res,
+                              [num = type(1), denom = type(2), n = size_t{1}](type coef) mutable {
+                                auto new_coef = coef * num / (denom * n);
+                                num -= denom;
+                                n++;
+                                return new_coef;
+                              });
+}
+
+template<typename type>
+void exp(const polynom<type> &p, polynom<type> &res)
+{
+  return compute_substitution(p, res, [n = size_t{1}](type coef) mutable { return coef / n++; });
+}
+
+template<typename type>
+void log_one_plus_p(const polynom<type> &p, polynom<type> &res)
+{
+  return compute_substitution(p, res,
+                              [n = type(1), sign = -1](type coef) mutable {
+                                return type(sign *= -1) / n++;
+                              }, type(0));
 }
 
 int main() {
@@ -238,20 +268,19 @@ int main() {
   int n, m;
   std::cin >> n >> m;
 
-  poly_t P(n + 1), Q(m + 1);
+  poly_t P(n + 1);
   for (auto &el : P)
     std::cin >> el;
-  for (auto &el : Q)
-    std::cin >> el;
 
-  auto sum = P + Q;
-  std::cout << sum.size() - 1 << '\n' << sum << '\n';
+  poly_t p1(m);
+  sqrt_one_plus_p(P, p1);
+  std::cout << p1 << '\n';
 
-  auto prod = P * Q;
-  std::cout << prod.size() - 1 << '\n' << P * Q << '\n';
+  exp(P, p1);
+  std::cout << p1 << '\n';
 
-  poly_t quotient(1000);
-  divide(P, Q, quotient);
-  std::cout << quotient << std::endl;
+  log_one_plus_p(P, p1);
+  std::cout << p1 << '\n';
+
   return 0;
 }
