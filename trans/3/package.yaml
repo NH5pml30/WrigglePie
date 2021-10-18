@@ -1,14 +1,4 @@
 name:                three
-version:             0.1.0.0
-github:              "githubuser/three"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
-
-extra-source-files:
-- README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -25,17 +15,23 @@ dependencies:
 - containers
 - mtl
 - array
+- HUnit
 
 build-tools: [ alex, happy ]
+
+library:
+  source-dirs: src
 
 executables:
   three-exe:
     main:                Main.hs
-    source-dirs:         src
+    source-dirs:         app
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    dependencies:
+    - three
 
 tests:
   three-test:
@@ -45,3 +41,5 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    dependencies:
+    - three
