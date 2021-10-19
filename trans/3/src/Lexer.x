@@ -10,7 +10,7 @@ $alpha = [a-zA-Z_]
 tokens :-
 
     $white+                     ;
-    $digit+                     { tokenFactory $ \s -> TokenNumber (read s :: Integer)}
+    $digit+                     { tokenFactory $ \s -> TokenNumber (read s :: Integer) }
     $alpha [$alpha $digit]*     { tokenFactory $ \s -> TokenVar s }
     =                           { tokenFactory $ \_ -> TokenAssign }
     \+                          { tokenFactory $ \_ -> TokenPlus }
@@ -23,6 +23,7 @@ tokens :-
     \;                          { tokenFactory $ \_ -> TokenSemicolon }
 
 {
+
 tokenFactory :: (String -> TokenData) -> AlexPosn -> String -> Token
 tokenFactory dataFactory p s = Token p (dataFactory s)
 

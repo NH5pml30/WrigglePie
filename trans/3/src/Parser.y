@@ -7,8 +7,10 @@ import Lexer
 import Grammar
 
 import Control.Monad.State
-import Control.Monad.Reader
-import Data.Map
+import Control.Monad
+import Data.Map ( Map, empty )
+import Data.Maybe
+
 }
 
 %name parseExpr
@@ -30,40 +32,31 @@ import Data.Map
 
 %attributetype { Context a }
 %attribute value { a }
-%attribute varMapIn { Map String Integer }
-%attribute varMapOut { Map String Integer }
-%attribute computed { Integer }
+%attribute lvalue { Maybe String }
 
 %%
 
-File        : Statements           { $$ = $1
-                                   ; $1.varMapIn = empty
-                                   }
+File        : Statements                 { $$ = evalState $1 (ClosureHistory empty []) }
 
-Statements  : Statement            { $$ = [$1]
-                                   ; $1.varMapIn = $$.varMapIn
-                                   }
-            | Statement Statements { $$ = $1 : $2
-                                   ; $1.varMapIn = $$.varMapIn
-                                   ; $2.varMapIn = $1.varMapOut
-                                   }
+Statements  : Statement ';'              { $$ = $1 >> gets ((: []) . closureToSideEffects) }
+            | Statement ';' Statements   { $$ = liftM2 (:) ($1 >> gets closureToSideEffects) (modify clearHistory >> $3) }
 
-Statement   : var '=' Expr ';'     { $3.computed = runReader $3 $$.varMapIn
-                                   ; $$ = SideEffect $1 $3.computed
-                                   ; $$.varMapOut = insert $1 $3.computed $$.varMapIn
-                                   }
+Statement   : Expr                       { $$ = $1; $$.lvalue = $1.lvalue }
+            | Expr '=' Statement         { $$ = $1 >> do {r <- $3; assignAction (fromJust $1.lvalue) r}
+                                         ; $$.lvalue = $1.lvalue
+                                         }
 
-Expr        : Term                 { $$ = $1 }
-            | Expr '+' Term        { $$ = liftM2 (+) $1 $3 }
-            | Expr '-' Term        { $$ = liftM2 (-) $1 $3 }
+Expr        : Term                       { $$ = $1; $$.lvalue = $1.lvalue }
+            | Expr '+' Term              { $$ = liftM2 (+) $1 $3; $$.lvalue = Nothing }
+            | Expr '-' Term              { $$ = liftM2 (-) $1 $3; $$.lvalue = Nothing }
 
-Term        : Factor               { $$ = $1 }
-            | Term '*' Factor      { $$ = liftM2 (*) $1 $3 }
-            | Term '/' Factor      { $$ = liftM2 div $1 $3 }
-            | Term '%' Factor      { $$ = liftM2 mod $1 $3 }
+Term        : Factor                     { $$ = $1; $$.lvalue = $1.lvalue }
+            | Term '*' Factor            { $$ = liftM2 (*) $1 $3; $$.lvalue = Nothing }
+            | Term '/' Factor            { $$ = liftM2 div $1 $3; $$.lvalue = Nothing }
+            | Term '%' Factor            { $$ = liftM2 mod $1 $3; $$.lvalue = Nothing }
 
-Factor      : '-' Factor           { $$ = negate <$> $2 }
-            | '+' Factor           { $$ = $2 }
-            | var                  { $$ = asks (! $1) }
-            | n                    { $$ = asks (const $1) }
-            | '(' Expr ')'         { $$ = $2 }
+Factor      : '-' Factor                 { $$ = negate <$> $2; $$.lvalue = Nothing }
+            | '+' Factor                 { $$ = $2; $$.lvalue = Nothing }
+            | var                        { $$ = gets (! $1); $$.lvalue = Just $1 }
+            | n                          { $$ = gets (const $1); $$.lvalue = Nothing }
+            | '(' Statement ')'          { $$ = $2; $$.lvalue = $2.lvalue }

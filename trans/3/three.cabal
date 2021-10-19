@@ -25,7 +25,7 @@ library
   build-depends:
       HUnit
     , array
-    , base >=4.7 && <5
+    , base >=4.14 && <5
     , containers
     , mtl
     , numeric-limits
@@ -44,7 +44,7 @@ executable three-exe
   build-depends:
       HUnit
     , array
-    , base >=4.7 && <5
+    , base >=4.14 && <5
     , containers
     , mtl
     , numeric-limits
@@ -65,7 +65,7 @@ test-suite three-test
   build-depends:
       HUnit
     , array
-    , base >=4.7 && <5
+    , base >=4.14 && <5
     , containers
     , mtl
     , numeric-limits

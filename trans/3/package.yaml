@@ -10,7 +10,7 @@ name:                three
 description:         Please see the README on GitHub at <https://github.com/githubuser/three#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.14 && < 5
 - numeric-limits
 - containers
 - mtl

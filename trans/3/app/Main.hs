@@ -1,8 +1,9 @@
 module Main where
 
 import Eval
+import Data.List (intercalate)
 
 main :: IO ()
 main = do
     str <- getContents
-    mapM_ print $ computeSideEffects str
+    mapM_ (putStrLn . intercalate ", " . map show) $ computeSideEffects str
