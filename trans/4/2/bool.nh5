@@ -1,0 +1,33 @@
+{
+#include "../Tree.h"
+}
+
+%lexer {
+	ws				/\s+/--
+	n				/[a-zA-Z]/
+	or				/\|/
+	xor				/\^/
+	and				/&/
+	not				/!/
+	lp				/\(/
+	rp				/\)/
+}
+
+%parser {
+	E :: std::unique_ptr<Tree>
+		: E or T		{ ternary_op("E", std::move($1), node("|"), std::move($3)) }
+		| T				{ unary_op("E", std::move($1)) }
+
+	T :: std::unique_ptr<Tree>
+		: T xor F		{ ternary_op("T", std::move($1), node("^"), std::move($3)) }
+		| F				{ unary_op("T", std::move($1)) }
+
+	F :: std::unique_ptr<Tree>
+		: F and G		{ ternary_op("F", std::move($1), node("&"), std::move($3)) }
+		| G				{ unary_op("F", std::move($1)) }
+
+	G :: std::unique_ptr<Tree>
+		: lp E rp		{ ternary_op("G", node("("), std::move($2), node(")")) }
+		| n				{ node("n") }
+		| not G			{ binary_op("G", node("!"), std::move($2)) }
+}

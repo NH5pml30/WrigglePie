@@ -1,0 +1,74 @@
+{
+#include "grammar_parse.h"
+}
+
+%lexer {
+	ws				/\s+/--
+	id				/[a-zA-Z_][a-zA-Z_0-9:<>,*]*/
+	open_curly		/\{/
+	close_curly		/\}/
+	lexer_begin		/%lexer/
+	parser_begin	/%parser/
+	regex			/\/(\\\/|[^\/])*\//
+	or				/\|/
+	double_colon	/::/
+	colon			/:/
+	minus			/\-\-/
+	any				/./
+}
+
+%parser {
+	file :: parser_configuration
+		: preamble_block lexer_block parser_block { _grammar_parse::to_config(std::move($1), std::move($2), std::move($3)) }
+
+	preamble_block :: std::string
+		: curly_block { $1 }
+
+	lexer_block :: _grammar_parse::lexer_block
+		: lexer_begin open_curly lexer_records close_curly { std::move($3) }
+
+	lexer_records :: _grammar_parse::lexer_block
+		: {}
+		| lexer_records lexer_record { _grammar_parse::append($1, std::move($2)) }
+
+	lexer_record :: _grammar_parse::lexer_record
+		: id regex { std::move($1), std::move($2), true }
+		| id regex minus { std::move($1), std::move($2), false }
+
+	parser_block :: _grammar_parse::parser_block
+		: parser_begin open_curly parser_records close_curly { std::move($3) }
+
+	parser_records :: _grammar_parse::parser_block
+		: parser_record { std::move($1) }
+		| parser_records parser_record { _grammar_parse::append($1, std::move($2)) }
+
+	parser_record :: _grammar_parse::parser_record
+		: id double_colon id colon parser_rule_rhss { std::move($1), std::move($3), std::move($5) }
+
+	parser_rule_rhss :: std::vector<_grammar_parse::parser_rule_rhs>
+		: parser_rule_rhs { std::move($1) }
+		| parser_rule_rhss or parser_rule_rhs { _grammar_parse::append($1, std::move($3)) }
+
+	parser_rule_rhs :: _grammar_parse::parser_rule_rhs
+		: parser_rule_content curly_block { std::move($1), std::move($2) }
+
+	parser_rule_content :: std::vector<std::string>
+		: {}
+		| parser_rule_content id { _grammar_parse::append($1, std::move($2)) }
+
+	curly_block :: std::string
+		: open_curly curly_block_content close_curly { $2 }
+
+	curly_block_content :: std::string
+		: { "" }
+		| curly_block_content ws { $1 + $2 }
+		| curly_block_content id { $1 + $2 }
+		| curly_block_content lexer_begin { $1 + $2 }
+		| curly_block_content parser_begin { $1 + $2 }
+		| curly_block_content regex { $1 + $2 }
+		| curly_block_content or { $1 + $2 }
+		| curly_block_content double_colon { $1 + $2 }
+		| curly_block_content colon { $1 + $2 }
+		| curly_block_content minus { $1 + $2 }
+		| curly_block_content any { $1 + $2 }
+}

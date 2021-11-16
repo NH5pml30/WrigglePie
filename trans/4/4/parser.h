@@ -63,10 +63,26 @@ public:
 
   parser_configuration parse(std::istream &i)
   {
+    using _attr_type0 = parser_configuration;
+    using _attr_type1 = parser_configuration;
+    using _attr_type2 = std::string;
+    using _attr_type3 = _grammar_parse::lexer_block;
+    using _attr_type4 = _grammar_parse::lexer_block;
+    using _attr_type5 = _grammar_parse::lexer_record;
+    using _attr_type6 = _grammar_parse::parser_block;
+    using _attr_type7 = _grammar_parse::parser_block;
+    using _attr_type8 = _grammar_parse::parser_record;
+    using _attr_type9 = std::vector<_grammar_parse::parser_rule_rhs>;
+    using _attr_type10 = _grammar_parse::parser_rule_rhs;
+    using _attr_type11 = std::vector<std::string>;
+    using _attr_type12 = std::string;
+    using _attr_type13 = std::string;
+
     _the_lexer.set_input(i);
 
     using _work_data_type = std::variant<unsigned, std::string, parser_configuration, parser_configuration, std::string, _grammar_parse::lexer_block, _grammar_parse::lexer_block, _grammar_parse::lexer_record, _grammar_parse::parser_block, _grammar_parse::parser_block, _grammar_parse::parser_record, std::vector<_grammar_parse::parser_rule_rhs>, _grammar_parse::parser_rule_rhs, std::vector<std::string>, std::string, std::string>;
-    std::vector<_work_data_type> _work = {_work_data_type{std::in_place_index<0>, 0u}};
+    std::vector<_work_data_type> _work;
+    _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
     bool _to_continue = true;
 
@@ -90,7 +106,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<3>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<2>, parser_configuration{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<2>, _attr_type0{std::move($1)}};
                                   _to_continue = false;
                                   break;
                                 }
@@ -105,7 +121,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, parser_configuration{_grammar_parse::to_config(std::move($1),std::move($2),std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{_grammar_parse::to_config(std::move($1),std::move($2),std::move($3))}};
                                   _lhs = 2;
                                   break;
                                 }
@@ -114,7 +130,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<14>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, std::string{$1}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{$1}};
                                   _lhs = 3;
                                   break;
                                 }
@@ -132,13 +148,13 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, _grammar_parse::lexer_block{std::move($3)}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{std::move($3)}};
                                   _lhs = 4;
                                   break;
                                 }
                                 case 4:
                                 {
-                                  $n = _work_data_type{std::in_place_index<6>, _grammar_parse::lexer_block{}};
+                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{}};
                                   _lhs = 5;
                                   break;
                                 }
@@ -150,7 +166,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<6>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<6>, _grammar_parse::lexer_block{_grammar_parse::append($1,std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{_grammar_parse::append($1,std::move($2))}};
                                   _lhs = 5;
                                   break;
                                 }
@@ -162,7 +178,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<7>, _grammar_parse::lexer_record{std::move($1),std::move($2),true}};
+                                  $n = _work_data_type{std::in_place_index<7>, _attr_type5{std::move($1),std::move($2),true}};
                                   _lhs = 6;
                                   break;
                                 }
@@ -177,7 +193,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<7>, _grammar_parse::lexer_record{std::move($1),std::move($2),false}};
+                                  $n = _work_data_type{std::in_place_index<7>, _attr_type5{std::move($1),std::move($2),false}};
                                   _lhs = 6;
                                   break;
                                 }
@@ -195,7 +211,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<8>, _grammar_parse::parser_block{std::move($3)}};
+                                  $n = _work_data_type{std::in_place_index<8>, _attr_type6{std::move($3)}};
                                   _lhs = 7;
                                   break;
                                 }
@@ -204,7 +220,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<10>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<9>, _grammar_parse::parser_block{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<9>, _attr_type7{std::move($1)}};
                                   _lhs = 8;
                                   break;
                                 }
@@ -216,7 +232,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<9>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<9>, _grammar_parse::parser_block{_grammar_parse::append($1,std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<9>, _attr_type7{_grammar_parse::append($1,std::move($2))}};
                                   _lhs = 8;
                                   break;
                                 }
@@ -237,7 +253,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<10>, _grammar_parse::parser_record{std::move($1),std::move($3),std::move($5)}};
+                                  $n = _work_data_type{std::in_place_index<10>, _attr_type8{std::move($1),std::move($3),std::move($5)}};
                                   _lhs = 9;
                                   break;
                                 }
@@ -246,7 +262,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<12>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<11>, std::vector<_grammar_parse::parser_rule_rhs>{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<11>, _attr_type9{std::move($1)}};
                                   _lhs = 10;
                                   break;
                                 }
@@ -261,7 +277,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<11>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<11>, std::vector<_grammar_parse::parser_rule_rhs>{_grammar_parse::append($1,std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<11>, _attr_type9{_grammar_parse::append($1,std::move($3))}};
                                   _lhs = 10;
                                   break;
                                 }
@@ -273,13 +289,13 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<13>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<12>, _grammar_parse::parser_rule_rhs{std::move($1),std::move($2)}};
+                                  $n = _work_data_type{std::in_place_index<12>, _attr_type10{std::move($1),std::move($2)}};
                                   _lhs = 11;
                                   break;
                                 }
                                 case 15:
                                 {
-                                  $n = _work_data_type{std::in_place_index<13>, std::vector<std::string>{}};
+                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{}};
                                   _lhs = 12;
                                   break;
                                 }
@@ -291,7 +307,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<13>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<13>, std::vector<std::string>{_grammar_parse::append($1,std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{_grammar_parse::append($1,std::move($2))}};
                                   _lhs = 12;
                                   break;
                                 }
@@ -306,13 +322,13 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<14>, std::string{$2}};
+                                  $n = _work_data_type{std::in_place_index<14>, _attr_type12{$2}};
                                   _lhs = 13;
                                   break;
                                 }
                                 case 18:
                                 {
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{""}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{""}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -324,7 +340,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -336,7 +352,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -348,7 +364,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -360,7 +376,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -372,7 +388,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -384,7 +400,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -396,7 +412,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -408,7 +424,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -420,7 +436,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -432,7 +448,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, std::string{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{$1+$2}};
                                   _lhs = 14;
                                   break;
                                 }
@@ -448,6 +464,6 @@ public:
                             }
         }, _trans_table[_state * 27 + _the_lexer.cur_token().token_id]);
     }
-    return std::get<2>(_work.back());
+    return std::get<2>(std::move(_work.back()));
   }
 };
