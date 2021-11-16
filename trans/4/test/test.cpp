@@ -6,6 +6,7 @@
 #include <format>
 #include <fstream>
 #include <map>
+#include <filesystem>
 
 #include "../2/generated/parser.h"
 
@@ -15,34 +16,20 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
   {
     "a|b",
     NodeBuilder("E").add(
-      NodeBuilder("T").add(
-        NodeBuilder("F").add(
-          NodeBuilder("G").add(
-            NodeBuilder("n").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
-        ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
-      ).finish()
-    ).add(
-      NodeBuilder("E'").add(
-        NodeBuilder("|").finish()
-      ).add(
+      NodeBuilder("E").add(
         NodeBuilder("T").add(
           NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
+            NodeBuilder("n").finish()
           ).finish()
-        ).add(
-          NodeBuilder("T'").finish()
         ).finish()
-      ).add(
-        NodeBuilder("E'").finish()
+      ).finish()
+    ).add(
+      NodeBuilder("|").finish()
+    ).add(
+      NodeBuilder("T").add(
+        NodeBuilder("F").add(
+          NodeBuilder("n").finish()
+        ).finish()
       ).finish()
     ).finish()
   },
@@ -51,55 +38,33 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
     NodeBuilder("E").add(
       NodeBuilder("T").add(
         NodeBuilder("F").add(
-          NodeBuilder("G").add(
+          NodeBuilder("F").add(
             NodeBuilder("n").finish()
           ).finish()
         ).add(
-          NodeBuilder("F'").add(
-            NodeBuilder("&").finish()
-          ).add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
-          ).finish()
+          NodeBuilder("&").finish()
+        ).add(
+          NodeBuilder("n").finish()
         ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
       ).finish()
-    ).add(
-      NodeBuilder("E'").finish()
     ).finish()
   },
   {
     "a^b",
     NodeBuilder("E").add(
       NodeBuilder("T").add(
-        NodeBuilder("F").add(
-          NodeBuilder("G").add(
+        NodeBuilder("T").add(
+          NodeBuilder("F").add(
             NodeBuilder("n").finish()
           ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
         ).finish()
       ).add(
-        NodeBuilder("T'").add(
-          NodeBuilder("^").finish()
-        ).add(
-          NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("T'").finish()
+        NodeBuilder("^").finish()
+      ).add(
+        NodeBuilder("F").add(
+          NodeBuilder("n").finish()
         ).finish()
       ).finish()
-    ).add(
-      NodeBuilder("E'").finish()
     ).finish()
   },
   {
@@ -110,125 +75,77 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
           NodeBuilder("G").add(
             NodeBuilder("!").finish()
           ).add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
+            NodeBuilder("n").finish()
           ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
         ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
       ).finish()
-    ).add(
-      NodeBuilder("E'").finish()
     ).finish()
   },
   {
     "a|b^c&d",
     NodeBuilder("E").add(
+      NodeBuilder("E").add(
+        NodeBuilder("T").add(
+          NodeBuilder("F").add(
+            NodeBuilder("n").finish()
+          ).finish()
+        ).finish()
+      ).finish()
+    ).add(
+      NodeBuilder("|").finish()
+    ).add(
       NodeBuilder("T").add(
+        NodeBuilder("T").add(
+          NodeBuilder("F").add(
+            NodeBuilder("n").finish()
+          ).finish()
+        ).finish()
+      ).add(
+        NodeBuilder("^").finish()
+      ).add(
         NodeBuilder("F").add(
-          NodeBuilder("G").add(
+          NodeBuilder("F").add(
             NodeBuilder("n").finish()
           ).finish()
         ).add(
-          NodeBuilder("F'").finish()
-        ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
-      ).finish()
-    ).add(
-      NodeBuilder("E'").add(
-        NodeBuilder("|").finish()
-      ).add(
-        NodeBuilder("T").add(
-          NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
-          ).finish()
+          NodeBuilder("&").finish()
         ).add(
-          NodeBuilder("T'").add(
-            NodeBuilder("^").finish()
-          ).add(
-            NodeBuilder("F").add(
-              NodeBuilder("G").add(
-                NodeBuilder("n").finish()
-              ).finish()
-            ).add(
-              NodeBuilder("F'").add(
-                NodeBuilder("&").finish()
-              ).add(
-                NodeBuilder("G").add(
-                  NodeBuilder("n").finish()
-                ).finish()
-              ).add(
-                NodeBuilder("F'").finish()
-              ).finish()
-            ).finish()
-          ).add(
-            NodeBuilder("T'").finish()
-          ).finish()
+          NodeBuilder("n").finish()
         ).finish()
-      ).add(
-        NodeBuilder("E'").finish()
       ).finish()
     ).finish()
   },
   {
     "a&b^c|d",
     NodeBuilder("E").add(
-      NodeBuilder("T").add(
-        NodeBuilder("F").add(
-          NodeBuilder("G").add(
-            NodeBuilder("n").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("F'").add(
-            NodeBuilder("&").finish()
-          ).add(
-            NodeBuilder("G").add(
+      NodeBuilder("E").add(
+        NodeBuilder("T").add(
+          NodeBuilder("T").add(
+            NodeBuilder("F").add(
+              NodeBuilder("F").add(
+                NodeBuilder("n").finish()
+              ).finish()
+            ).add(
+              NodeBuilder("&").finish()
+            ).add(
               NodeBuilder("n").finish()
             ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
           ).finish()
-        ).finish()
-      ).add(
-        NodeBuilder("T'").add(
+        ).add(
           NodeBuilder("^").finish()
         ).add(
           NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
+            NodeBuilder("n").finish()
           ).finish()
-        ).add(
-          NodeBuilder("T'").finish()
         ).finish()
       ).finish()
     ).add(
-      NodeBuilder("E'").add(
-        NodeBuilder("|").finish()
-      ).add(
-        NodeBuilder("T").add(
-          NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("T'").finish()
+      NodeBuilder("|").finish()
+    ).add(
+      NodeBuilder("T").add(
+        NodeBuilder("F").add(
+          NodeBuilder("n").finish()
         ).finish()
-      ).add(
-        NodeBuilder("E'").finish()
       ).finish()
     ).finish()
   },
@@ -255,255 +172,165 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
                     NodeBuilder("G").add(
                       NodeBuilder("!").finish()
                     ).add(
-                      NodeBuilder("G").add(
-                        NodeBuilder("n").finish()
-                      ).finish()
+                      NodeBuilder("n").finish()
                     ).finish()
                   ).finish()
                 ).finish()
               ).finish()
             ).finish()
           ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
         ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
       ).finish()
-    ).add(
-      NodeBuilder("E'").finish()
     ).finish()
   },
   {
     "a|(b|c)^!!(c|e)&!(d|e)",
     NodeBuilder("E").add(
-      NodeBuilder("T").add(
-        NodeBuilder("F").add(
-          NodeBuilder("G").add(
+      NodeBuilder("E").add(
+        NodeBuilder("T").add(
+          NodeBuilder("F").add(
             NodeBuilder("n").finish()
           ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
         ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
       ).finish()
     ).add(
-      NodeBuilder("E'").add(
-        NodeBuilder("|").finish()
-      ).add(
+      NodeBuilder("|").finish()
+    ).add(
+      NodeBuilder("T").add(
         NodeBuilder("T").add(
           NodeBuilder("F").add(
             NodeBuilder("G").add(
               NodeBuilder("(").finish()
             ).add(
               NodeBuilder("E").add(
-                NodeBuilder("T").add(
-                  NodeBuilder("F").add(
-                    NodeBuilder("G").add(
-                      NodeBuilder("n").finish()
-                    ).finish()
-                  ).add(
-                    NodeBuilder("F'").finish()
-                  ).finish()
-                ).add(
-                  NodeBuilder("T'").finish()
-                ).finish()
-              ).add(
-                NodeBuilder("E'").add(
-                  NodeBuilder("|").finish()
-                ).add(
+                NodeBuilder("E").add(
                   NodeBuilder("T").add(
                     NodeBuilder("F").add(
-                      NodeBuilder("G").add(
-                        NodeBuilder("n").finish()
-                      ).finish()
-                    ).add(
-                      NodeBuilder("F'").finish()
+                      NodeBuilder("n").finish()
                     ).finish()
-                  ).add(
-                    NodeBuilder("T'").finish()
                   ).finish()
-                ).add(
-                  NodeBuilder("E'").finish()
+                ).finish()
+              ).add(
+                NodeBuilder("|").finish()
+              ).add(
+                NodeBuilder("T").add(
+                  NodeBuilder("F").add(
+                    NodeBuilder("n").finish()
+                  ).finish()
                 ).finish()
               ).finish()
             ).add(
               NodeBuilder(")").finish()
             ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
           ).finish()
-        ).add(
-          NodeBuilder("T'").add(
-            NodeBuilder("^").finish()
-          ).add(
-            NodeBuilder("F").add(
+        ).finish()
+      ).add(
+        NodeBuilder("^").finish()
+      ).add(
+        NodeBuilder("F").add(
+          NodeBuilder("F").add(
+            NodeBuilder("G").add(
+              NodeBuilder("!").finish()
+            ).add(
               NodeBuilder("G").add(
                 NodeBuilder("!").finish()
               ).add(
                 NodeBuilder("G").add(
-                  NodeBuilder("!").finish()
+                  NodeBuilder("(").finish()
                 ).add(
-                  NodeBuilder("G").add(
-                    NodeBuilder("(").finish()
-                  ).add(
+                  NodeBuilder("E").add(
                     NodeBuilder("E").add(
                       NodeBuilder("T").add(
                         NodeBuilder("F").add(
-                          NodeBuilder("G").add(
-                            NodeBuilder("n").finish()
-                          ).finish()
-                        ).add(
-                          NodeBuilder("F'").finish()
+                          NodeBuilder("n").finish()
                         ).finish()
-                      ).add(
-                        NodeBuilder("T'").finish()
-                      ).finish()
-                    ).add(
-                      NodeBuilder("E'").add(
-                        NodeBuilder("|").finish()
-                      ).add(
-                        NodeBuilder("T").add(
-                          NodeBuilder("F").add(
-                            NodeBuilder("G").add(
-                              NodeBuilder("n").finish()
-                            ).finish()
-                          ).add(
-                            NodeBuilder("F'").finish()
-                          ).finish()
-                        ).add(
-                          NodeBuilder("T'").finish()
-                        ).finish()
-                      ).add(
-                        NodeBuilder("E'").finish()
                       ).finish()
                     ).finish()
                   ).add(
-                    NodeBuilder(")").finish()
+                    NodeBuilder("|").finish()
+                  ).add(
+                    NodeBuilder("T").add(
+                      NodeBuilder("F").add(
+                        NodeBuilder("n").finish()
+                      ).finish()
+                    ).finish()
+                  ).finish()
+                ).add(
+                  NodeBuilder(")").finish()
+                ).finish()
+              ).finish()
+            ).finish()
+          ).finish()
+        ).add(
+          NodeBuilder("&").finish()
+        ).add(
+          NodeBuilder("G").add(
+            NodeBuilder("!").finish()
+          ).add(
+            NodeBuilder("G").add(
+              NodeBuilder("(").finish()
+            ).add(
+              NodeBuilder("E").add(
+                NodeBuilder("E").add(
+                  NodeBuilder("T").add(
+                    NodeBuilder("F").add(
+                      NodeBuilder("n").finish()
+                    ).finish()
+                  ).finish()
+                ).finish()
+              ).add(
+                NodeBuilder("|").finish()
+              ).add(
+                NodeBuilder("T").add(
+                  NodeBuilder("F").add(
+                    NodeBuilder("n").finish()
                   ).finish()
                 ).finish()
               ).finish()
             ).add(
-              NodeBuilder("F'").add(
-                NodeBuilder("&").finish()
-              ).add(
-                NodeBuilder("G").add(
-                  NodeBuilder("!").finish()
-                ).add(
-                  NodeBuilder("G").add(
-                    NodeBuilder("(").finish()
-                  ).add(
-                    NodeBuilder("E").add(
-                      NodeBuilder("T").add(
-                        NodeBuilder("F").add(
-                          NodeBuilder("G").add(
-                            NodeBuilder("n").finish()
-                          ).finish()
-                        ).add(
-                          NodeBuilder("F'").finish()
-                        ).finish()
-                      ).add(
-                        NodeBuilder("T'").finish()
-                      ).finish()
-                    ).add(
-                      NodeBuilder("E'").add(
-                        NodeBuilder("|").finish()
-                      ).add(
-                        NodeBuilder("T").add(
-                          NodeBuilder("F").add(
-                            NodeBuilder("G").add(
-                              NodeBuilder("n").finish()
-                            ).finish()
-                          ).add(
-                            NodeBuilder("F'").finish()
-                          ).finish()
-                        ).add(
-                          NodeBuilder("T'").finish()
-                        ).finish()
-                      ).add(
-                        NodeBuilder("E'").finish()
-                      ).finish()
-                    ).finish()
-                  ).add(
-                    NodeBuilder(")").finish()
-                  ).finish()
-                ).finish()
-              ).add(
-                NodeBuilder("F'").finish()
-              ).finish()
+              NodeBuilder(")").finish()
             ).finish()
-          ).add(
-            NodeBuilder("T'").finish()
           ).finish()
         ).finish()
-      ).add(
-        NodeBuilder("E'").finish()
       ).finish()
     ).finish()
   },
   {
     "a|b|c|d",
     NodeBuilder("E").add(
-      NodeBuilder("T").add(
-        NodeBuilder("F").add(
-          NodeBuilder("G").add(
-            NodeBuilder("n").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
-        ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
-      ).finish()
-    ).add(
-      NodeBuilder("E'").add(
-        NodeBuilder("|").finish()
-      ).add(
-        NodeBuilder("T").add(
-          NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
+      NodeBuilder("E").add(
+        NodeBuilder("E").add(
+          NodeBuilder("E").add(
+            NodeBuilder("T").add(
+              NodeBuilder("F").add(
+                NodeBuilder("n").finish()
+              ).finish()
             ).finish()
-          ).add(
-            NodeBuilder("F'").finish()
           ).finish()
         ).add(
-          NodeBuilder("T'").finish()
-        ).finish()
-      ).add(
-        NodeBuilder("E'").add(
           NodeBuilder("|").finish()
         ).add(
           NodeBuilder("T").add(
             NodeBuilder("F").add(
-              NodeBuilder("G").add(
-                NodeBuilder("n").finish()
-              ).finish()
-            ).add(
-              NodeBuilder("F'").finish()
+              NodeBuilder("n").finish()
             ).finish()
-          ).add(
-            NodeBuilder("T'").finish()
           ).finish()
-        ).add(
-          NodeBuilder("E'").add(
-            NodeBuilder("|").finish()
-          ).add(
-            NodeBuilder("T").add(
-              NodeBuilder("F").add(
-                NodeBuilder("G").add(
-                  NodeBuilder("n").finish()
-                ).finish()
-              ).add(
-                NodeBuilder("F'").finish()
-              ).finish()
-            ).add(
-              NodeBuilder("T'").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("E'").finish()
+        ).finish()
+      ).add(
+        NodeBuilder("|").finish()
+      ).add(
+        NodeBuilder("T").add(
+          NodeBuilder("F").add(
+            NodeBuilder("n").finish()
           ).finish()
+        ).finish()
+      ).finish()
+    ).add(
+      NodeBuilder("|").finish()
+    ).add(
+      NodeBuilder("T").add(
+        NodeBuilder("F").add(
+          NodeBuilder("n").finish()
         ).finish()
       ).finish()
     ).finish()
@@ -512,54 +339,34 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
     "a^b^c^d",
     NodeBuilder("E").add(
       NodeBuilder("T").add(
-        NodeBuilder("F").add(
-          NodeBuilder("G").add(
-            NodeBuilder("n").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("F'").finish()
-        ).finish()
-      ).add(
-        NodeBuilder("T'").add(
-          NodeBuilder("^").finish()
-        ).add(
-          NodeBuilder("F").add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
+        NodeBuilder("T").add(
+          NodeBuilder("T").add(
+            NodeBuilder("T").add(
+              NodeBuilder("F").add(
+                NodeBuilder("n").finish()
+              ).finish()
             ).finish()
           ).add(
-            NodeBuilder("F'").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("T'").add(
             NodeBuilder("^").finish()
           ).add(
             NodeBuilder("F").add(
-              NodeBuilder("G").add(
-                NodeBuilder("n").finish()
-              ).finish()
-            ).add(
-              NodeBuilder("F'").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("T'").add(
-              NodeBuilder("^").finish()
-            ).add(
-              NodeBuilder("F").add(
-                NodeBuilder("G").add(
-                  NodeBuilder("n").finish()
-                ).finish()
-              ).add(
-                NodeBuilder("F'").finish()
-              ).finish()
-            ).add(
-              NodeBuilder("T'").finish()
+              NodeBuilder("n").finish()
             ).finish()
           ).finish()
+        ).add(
+          NodeBuilder("^").finish()
+        ).add(
+          NodeBuilder("F").add(
+            NodeBuilder("n").finish()
+          ).finish()
+        ).finish()
+      ).add(
+        NodeBuilder("^").finish()
+      ).add(
+        NodeBuilder("F").add(
+          NodeBuilder("n").finish()
         ).finish()
       ).finish()
-    ).add(
-      NodeBuilder("E'").finish()
     ).finish()
   },
   {
@@ -567,41 +374,27 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
     NodeBuilder("E").add(
       NodeBuilder("T").add(
         NodeBuilder("F").add(
-          NodeBuilder("G").add(
-            NodeBuilder("n").finish()
-          ).finish()
-        ).add(
-          NodeBuilder("F'").add(
-            NodeBuilder("&").finish()
-          ).add(
-            NodeBuilder("G").add(
-              NodeBuilder("n").finish()
-            ).finish()
-          ).add(
-            NodeBuilder("F'").add(
-              NodeBuilder("&").finish()
-            ).add(
-              NodeBuilder("G").add(
+          NodeBuilder("F").add(
+            NodeBuilder("F").add(
+              NodeBuilder("F").add(
                 NodeBuilder("n").finish()
               ).finish()
             ).add(
-              NodeBuilder("F'").add(
-                NodeBuilder("&").finish()
-              ).add(
-                NodeBuilder("G").add(
-                  NodeBuilder("n").finish()
-                ).finish()
-              ).add(
-                NodeBuilder("F'").finish()
-              ).finish()
+              NodeBuilder("&").finish()
+            ).add(
+              NodeBuilder("n").finish()
             ).finish()
+          ).add(
+            NodeBuilder("&").finish()
+          ).add(
+            NodeBuilder("n").finish()
           ).finish()
+        ).add(
+          NodeBuilder("&").finish()
+        ).add(
+          NodeBuilder("n").finish()
         ).finish()
-      ).add(
-        NodeBuilder("T'").finish()
       ).finish()
-    ).add(
-      NodeBuilder("E'").finish()
     ).finish()
   },
 };
@@ -620,6 +413,7 @@ bool test() {
     try
     {
       actual = LALR_parser().parse(s);
+      // std::cout << "  {\n    \"" << input << "\",\n" << actual->to_builder_str(2) << "\n  }," << std::endl;
     }
     catch (std::exception &e)
     {
@@ -673,5 +467,7 @@ bool test() {
 }
 
 int main() {
+  // std::filesystem::current_path("../2/");
+
   return test() ? 0 : 1;
 }
