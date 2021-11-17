@@ -109,7 +109,7 @@ private:
     fmt.increase_indent(2);
     fmt.out << std::boolalpha;
     for (auto &&[str, passed] : nonterminal_matchers)
-      fmt << "{std::regex(R\"__del(^" << str << ")__del\"), " << passed << "},\n";
+      fmt << "{std::regex(R\"__del(" << str << ")__del\"), " << passed << "},\n";
     fmt.decrease_indent(2);
     fmt.out << std::noboolalpha;
     fmt << R"__delim(  };
@@ -164,21 +164,21 @@ public:
 
   void next_token()
   {
-    if (cur_line_pos == cur_line.size())
-      if (!next_line())
-      {
-        cur_token_ = token{0, ""};
-        return;
-      }
-
     bool passed_through = false;
     do
     {
+      if (cur_line_pos == cur_line.size())
+        if (!next_line())
+        {
+          cur_token_ = token{0, ""};
+          return;
+        }
+
       std::smatch m;
       int id = 0;
       for (auto &&[matcher, passed] : matchers)
       {
-        if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher))
+        if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher, std::regex_constants::match_continuous))
         {
           push_token(id, passed, m.length());
           passed_through |= passed;

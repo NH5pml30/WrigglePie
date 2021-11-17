@@ -3,8 +3,11 @@
 }
 
 %lexer {
-	ws				/\s+/--
+	ws				/[\s\n]+/--
 	id				/[a-zA-Z_][a-zA-Z_0-9:<>,*]*/
+	tilde			/~/
+	open_par		/\(/
+	close_par		/\)/
 	open_curly		/\{/
 	close_curly		/\}/
 	lexer_begin		/%lexer/
@@ -52,23 +55,23 @@
 	parser_rule_rhs :: _grammar_parse::parser_rule_rhs
 		: parser_rule_content curly_block { std::move($1), std::move($2) }
 
-	parser_rule_content :: std::vector<std::string>
+	parser_rule_content :: std::vector<_grammar_parse::parse_rule_content_element>
 		: {}
-		| parser_rule_content id { _grammar_parse::append($1, std::move($2)) }
+		| parser_rule_content id { _grammar_parse::append($1, _grammar_parse::content_el_from_terminal(std::move($2))) }
+		| parser_rule_content inv_tokens { _grammar_parse::append($1, _grammar_parse::content_el_from_tilde(std::move($2))) }
+
+	inv_tokens :: std::vector<std::string>
+		: tilde id { std::move($2) }
+		| tilde open_par tokens close_par { std::move($3) }
+
+	tokens :: std::vector<std::string>
+		: id { std::move($1) }
+		| tokens id { _grammar_parse::append($1, std::move($2)) }
 
 	curly_block :: std::string
 		: open_curly curly_block_content close_curly { $2 }
 
 	curly_block_content :: std::string
 		: { "" }
-		| curly_block_content ws { $1 + $2 }
-		| curly_block_content id { $1 + $2 }
-		| curly_block_content lexer_begin { $1 + $2 }
-		| curly_block_content parser_begin { $1 + $2 }
-		| curly_block_content regex { $1 + $2 }
-		| curly_block_content or { $1 + $2 }
-		| curly_block_content double_colon { $1 + $2 }
-		| curly_block_content colon { $1 + $2 }
-		| curly_block_content minus { $1 + $2 }
-		| curly_block_content any { $1 + $2 }
+		| curly_block_content ~( open_curly close_curly ) { $1 + $2 }
 }

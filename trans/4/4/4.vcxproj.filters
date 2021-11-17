@@ -27,6 +27,12 @@
     <ClInclude Include="parser_generator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="lexer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="parser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="grammar.h">

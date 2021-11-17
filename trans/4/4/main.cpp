@@ -161,7 +161,10 @@ int main(int argc, char *argv[]) {
   {
     std::cout << grammar << std::endl;
     std::ifstream i(grammar);
+    auto saved = std::filesystem::current_path();
+    std::filesystem::current_path(std::filesystem::path(argv[0]).parent_path());
     auto gen = parser_generator(LALR_parser().parse(i));
+    std::filesystem::current_path(saved);
     gen.generate_files(dir, "parser_table.dat", "lexer.h", "parser.h");
   }
   catch (std::exception &e)

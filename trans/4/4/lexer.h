@@ -56,18 +56,21 @@ public:
 private:
   token cur_token_;
   std::vector<std::pair<std::regex, bool>> matchers = {
-    {std::regex(R"__del(^\s+)__del"), false},
-    {std::regex(R"__del(^[a-zA-Z_][a-zA-Z_0-9:<>,*]*)__del"), true},
-    {std::regex(R"__del(^\{)__del"), true},
-    {std::regex(R"__del(^\})__del"), true},
-    {std::regex(R"__del(^%lexer)__del"), true},
-    {std::regex(R"__del(^%parser)__del"), true},
-    {std::regex(R"__del(^/(\\/|[^/])*/)__del"), true},
-    {std::regex(R"__del(^\|)__del"), true},
-    {std::regex(R"__del(^::)__del"), true},
-    {std::regex(R"__del(^:)__del"), true},
-    {std::regex(R"__del(^\-\-)__del"), true},
-    {std::regex(R"__del(^.)__del"), true},
+    {std::regex(R"__del([\s\n]+)__del"), false},
+    {std::regex(R"__del([a-zA-Z_][a-zA-Z_0-9:<>,*]*)__del"), true},
+    {std::regex(R"__del(~)__del"), true},
+    {std::regex(R"__del(\()__del"), true},
+    {std::regex(R"__del(\))__del"), true},
+    {std::regex(R"__del(\{)__del"), true},
+    {std::regex(R"__del(\})__del"), true},
+    {std::regex(R"__del(%lexer)__del"), true},
+    {std::regex(R"__del(%parser)__del"), true},
+    {std::regex(R"__del(/(\\/|[^/])*/)__del"), true},
+    {std::regex(R"__del(\|)__del"), true},
+    {std::regex(R"__del(::)__del"), true},
+    {std::regex(R"__del(:)__del"), true},
+    {std::regex(R"__del(\-\-)__del"), true},
+    {std::regex(R"__del(.)__del"), true},
   };
 
   bool next_line()
@@ -91,7 +94,7 @@ private:
   void push_token(int id, bool passed, int length)
   {
     if (passed)
-      cur_token_ = token{15 + id, cur_line.substr(cur_line_pos, length)};
+      cur_token_ = token{17 + id, cur_line.substr(cur_line_pos, length)};
     cur_line_pos += length;
   }
 
@@ -120,21 +123,21 @@ public:
 
   void next_token()
   {
-    if (cur_line_pos == cur_line.size())
-      if (!next_line())
-      {
-        cur_token_ = token{0, ""};
-        return;
-      }
-
     bool passed_through = false;
     do
     {
+      if (cur_line_pos == cur_line.size())
+        if (!next_line())
+        {
+          cur_token_ = token{0, ""};
+          return;
+        }
+
       std::smatch m;
       int id = 0;
       for (auto &&[matcher, passed] : matchers)
       {
-        if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher))
+        if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher, std::regex_constants::match_continuous))
         {
           push_token(id, passed, m.length());
           passed_through |= passed;

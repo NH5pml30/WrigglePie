@@ -26,9 +26,19 @@ namespace _grammar_parse
 
   using lexer_block = std::vector<lexer_record>;
 
+  using parse_rule_content_element = std::variant<std::string, std::vector<std::string>>;
+
+  inline parse_rule_content_element content_el_from_terminal(std::string data) {
+    return parse_rule_content_element{std::in_place_index<0>, std::move(data)};
+  }
+
+  inline parse_rule_content_element content_el_from_tilde(std::vector<std::string> data) {
+    return parse_rule_content_element{std::in_place_index<1>, std::move(data)};
+  }
+
   struct parser_rule_rhs
   {
-    std::vector<std::string> rhs;
+    std::vector<parse_rule_content_element> rhs;
     std::string attribute;
   };
 
@@ -70,16 +80,52 @@ namespace _grammar_parse
 
       for (auto &rule_rhs : record.rule_rhss)
       {
-        using namespace std::placeholders;
-        std::vector<grammar::element> rhs;
-        std::ranges::transform(rule_rhs.rhs, std::back_inserter(rhs),
-                               [&el_map](auto &&x) { return el_map[x]; });
         // replace escaped {} and wrap
-        std::string res = "{";
-        std::regex_replace(std::back_inserter(res), rule_rhs.attribute.begin(),
+        std::string attr = "{";
+        std::regex_replace(std::back_inserter(attr), rule_rhs.attribute.begin(),
                            rule_rhs.attribute.end(), brace_reg, "$1$2");
-        res.push_back('}');
-        rules.emplace_back(record.cached_id, grammar::rule{std::move(rhs), std::move(res)});
+        attr.push_back('}');
+
+        // process inverted terminals (~)
+        std::vector<std::variant<grammar::element, std::vector<grammar::terminal>>> preproc;
+        for (auto &content_el : rule_rhs.rhs)
+        {
+          if (content_el.index() == 0)
+            preproc.emplace_back(std::in_place_index<0>, el_map[std::get<0>(content_el)]);
+          else
+          {
+            std::vector<grammar::terminal> ts;
+            std::ranges::transform(std::get<1>(content_el), std::back_inserter(ts),
+                                   [&el_map](auto &&x) { return el_map[x]; }); /// assert terminal?
+            preproc.emplace_back(std::in_place_index<1>, std::move(ts));
+          }
+        }
+
+        // for each inverted set generate all the possible rules (might be a lot)
+        auto gen = [&, res = std::vector<grammar::element>()](auto &gen) mutable {
+          if (res.size() == preproc.size())
+          {
+            rules.emplace_back(record.cached_id, grammar::rule{res, attr});
+            return;
+          }
+
+          size_t i = res.size();
+          if (preproc[i].index() == 0)
+          {
+            res.push_back(std::get<0>(preproc[i]));
+            return gen(gen);
+          }
+
+          const auto &not_set = std::get<1>(preproc[i]);
+          for (grammar::terminal t = max_nonterminal; t < max_element; t++)
+            if (std::ranges::find(not_set, t) == not_set.end())
+            {
+              res.push_back(t);
+              gen(gen);
+              res.pop_back();
+            }
+        };
+        gen(gen);
       }
     }
 

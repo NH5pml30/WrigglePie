@@ -97,7 +97,10 @@
       <AdditionalLibraryDirectories>K:\TGRKIT\LIB\Win32</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\ &amp;&amp; copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\</Command>
+      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\
+copy $(ProjectDir)parser_table.dat $(TargetDir)
+copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,7 +122,10 @@
       <AdditionalLibraryDirectories>K:\TGRKIT\LIB\Win32</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\ &amp;&amp; copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\</Command>
+      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\
+copy $(ProjectDir)parser_table.dat $(TargetDir)
+copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -137,7 +143,10 @@
       <AdditionalLibraryDirectories>K:\TGRKIT\LIB\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\ &amp;&amp; copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\</Command>
+      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\
+copy $(ProjectDir)parser_table.dat $(TargetDir)
+copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -159,13 +168,18 @@
       <AdditionalLibraryDirectories>K:\TGRKIT\LIB\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\ &amp;&amp; copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\</Command>
+      <Command>copy $(TargetDir)$(TargetFileName) $(SolutionDir)tool\
+copy $(ProjectDir)parser_table.dat $(TargetDir)
+copy $(ProjectDir)parser_table.dat $(SolutionDir)tool\
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="control_auto.h" />
     <ClInclude Include="grammar_parse.h" />
+    <ClInclude Include="lexer.h" />
+    <ClInclude Include="parser.h" />
     <ClInclude Include="parser_generator.h" />
   </ItemGroup>
   <ItemGroup>
