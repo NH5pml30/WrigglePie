@@ -67,6 +67,7 @@ test-suite three-test
     , array
     , base >=4.14 && <5
     , containers
+    , deepseq
     , mtl
     , numeric-limits
     , three

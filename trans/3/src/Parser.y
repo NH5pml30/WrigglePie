@@ -42,21 +42,21 @@ Statements  : Statement ';'              { $$ = $1 >> gets ((: []) . closureToSi
             | Statement ';' Statements   { $$ = liftM2 (:) ($1 >> gets closureToSideEffects) (modify clearHistory >> $3) }
 
 Statement   : Expr                       { $$ = $1; $$.lvalue = $1.lvalue }
-            | Expr '=' Statement         { $$ = $1 >> do {r <- $3; assignAction (fromJust $1.lvalue) r}
+            | Expr '=' Statement         { $$ = $1 >> do {r <- $3; h <- get; assignAction (fromJust $1.lvalue) r h}
                                          ; $$.lvalue = $1.lvalue
                                          }
 
 Expr        : Term                       { $$ = $1; $$.lvalue = $1.lvalue }
-            | Expr '+' Term              { $$ = liftM2 (+) $1 $3; $$.lvalue = Nothing }
-            | Expr '-' Term              { $$ = liftM2 (-) $1 $3; $$.lvalue = Nothing }
+            | Expr '+' Term              { $$ = liftM2 (liftA2 (+)) $1 $3; $$.lvalue = Nothing }
+            | Expr '-' Term              { $$ = liftM2 (liftA2 (-)) $1 $3; $$.lvalue = Nothing }
 
 Term        : Factor                     { $$ = $1; $$.lvalue = $1.lvalue }
-            | Term '*' Factor            { $$ = liftM2 (*) $1 $3; $$.lvalue = Nothing }
-            | Term '/' Factor            { $$ = liftM2 div $1 $3; $$.lvalue = Nothing }
-            | Term '%' Factor            { $$ = liftM2 mod $1 $3; $$.lvalue = Nothing }
+            | Term '*' Factor            { $$ = liftM2 (liftA2 (*)) $1 $3; $$.lvalue = Nothing }
+            | Term '/' Factor            { $$ = liftM2 (join `composeTwo` liftA2 safeDiv) $1 $3; $$.lvalue = Nothing }
+            | Term '%' Factor            { $$ = liftM2 (liftA2 mod) $1 $3; $$.lvalue = Nothing }
 
-Factor      : '-' Factor                 { $$ = negate <$> $2; $$.lvalue = Nothing }
+Factor      : '-' Factor                 { $$ = (negate <$>) <$> $2; $$.lvalue = Nothing }
             | '+' Factor                 { $$ = $2; $$.lvalue = Nothing }
-            | var                        { $$ = gets (! $1); $$.lvalue = Just $1 }
-            | n                          { $$ = gets (const $1); $$.lvalue = Nothing }
+            | var                        { $$ = gets (Just . (! $1)); $$.lvalue = Just $1 }
+            | n                          { $$ = gets (Just . (const $1)); $$.lvalue = Nothing }
             | '(' Statement ')'          { $$ = $2; $$.lvalue = $2.lvalue }

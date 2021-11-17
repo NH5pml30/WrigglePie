@@ -23,5 +23,14 @@ closureToSideEffects (ClosureHistory _ a) = reverse a
 clearHistory :: ClosureHistory -> ClosureHistory
 clearHistory (ClosureHistory varmap _) = ClosureHistory varmap []
 
-assignAction :: String -> Integer -> State ClosureHistory Integer
-assignAction lhs rhs = modify (closureAssign lhs rhs) >> return rhs
+assignAction :: String -> Maybe Integer -> ClosureHistory -> State ClosureHistory (Maybe Integer)
+assignAction lhs rhs h = case rhs of
+    Just x -> modify (closureAssign lhs x) >> return rhs
+    Nothing -> return $ Just $ h ! lhs
+
+safeDiv :: Integer -> Integer -> Maybe Integer
+safeDiv _ 0 = Nothing
+safeDiv a b = Just $ a `div` b
+
+composeTwo :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
+composeTwo = (.) . (.)

@@ -1,9 +1,23 @@
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE BlockArguments #-}
+
 import Test.HUnit
 
 import Eval (computeSideEffects)
+import Control.Exception
+import Data.List (intercalate)
+import Control.Monad
+import Control.DeepSeq
 
 computeOutput :: String -> [[String]]
 computeOutput str = map (map show) $ computeSideEffects str
+
+assertThrows :: String -> Assertion
+assertThrows input = do
+    let handler :: ErrorCall -> IO Bool
+        handler e = return False
+    nothrow <- (evaluate (force (computeOutput input)) >> return True) `catch` handler
+    when nothrow $ assertFailure "Expected error"
 
 tests :: Test
 tests = test [
@@ -33,7 +47,11 @@ tests = test [
                 "multiple ws" ~: [["a = 2"]] ~=? computeOutput "a = (1 +   1   * \n  3)   / \t 2;"
         ],
         "lvalue expression" ~: [["a = 0", "a = 2"]] ~=? computeOutput "(a = 0) = 2;",
-        "rvalue assignment" ~: [["a = 0", "b = 1", "a = 3"]] ~=? computeOutput "(a = 0) = (b = 1) + 2;"
+        "rvalue assignment" ~: [["a = 0", "b = 1", "a = 3"]] ~=? computeOutput "(a = 0) = (b = 1) + 2;",
+        "error" ~: test [
+                "rvalue assignment" ~: assertThrows "a + 1 = 0;",
+                "uninitialized variable" ~: assertThrows "a = a;"
+        ]
     ]
 
 main :: IO ()
