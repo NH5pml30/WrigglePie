@@ -402,7 +402,7 @@ std::pair<std::string, std::unique_ptr<Tree>> tests[] = {
 std::vector<std::string> fails = {"aa", "a`", "a=b", "~a", "a||b", "(a|b|c", "a|b|c)"};
 
 bool test() {
-  int n_tests = sizeof(tests) / sizeof(tests[0]) + fails.size();
+  int n_tests = sizeof(tests) / sizeof(tests[0]) + (int)fails.size();
   auto out_passed = [n_tests](int passed) { std::cout << "Passed/all: " << passed << '/' << n_tests << std::endl; };
 
   int passed = 0;

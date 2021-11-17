@@ -211,7 +211,7 @@ public:
       {
         if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher, std::regex_constants::match_continuous))
         {
-          push_token(id, passed, m.length());
+          push_token(id, passed, (int)m.length());
           passed_through |= passed;
           break;
         }
@@ -387,7 +387,7 @@ public:
       }
 
       // pop arguments from the stack and compute attribute
-      for (unsigned i = G[rule_id].second.rhs.size(); i > 0; i--)
+      for (unsigned i = (unsigned)G[rule_id].second.rhs.size(); i > 0; i--)
       {
         fmt << "_work.pop_back();\n";
         unsigned index = 0;

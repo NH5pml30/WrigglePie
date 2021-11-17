@@ -164,7 +164,7 @@ public:
       {
         if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher, std::regex_constants::match_continuous))
         {
-          push_token(id, passed, m.length());
+          push_token(id, passed, (int)m.length());
           passed_through |= passed;
           break;
         }
