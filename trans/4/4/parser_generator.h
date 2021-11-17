@@ -12,10 +12,10 @@ public:
   control_automaton automaton;
 
   parser_generator(parser_configuration conf)
-      : automaton(std::move(conf.G)),
-        preamble(std::move(conf.preamble)),
+      : preamble(std::move(conf.preamble)),
         printer(std::move(conf.printer)),
-        nonterminal_matchers(std::move(conf.nonterminal_matchers))
+        nonterminal_matchers(std::move(conf.nonterminal_matchers)),
+        automaton(std::move(conf.G), printer)
   {
   }
 

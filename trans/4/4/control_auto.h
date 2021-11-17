@@ -153,7 +153,21 @@ private:
     return (unsigned)(states_stg.size() - 1);
   }
 
-  void build_automaton()
+  std::runtime_error reduce_reduce_conflict(unsigned rule1, unsigned rule2)
+  {
+    throw std::runtime_error(std::format("Reduce-reduce conflict: rule '{}' or '{}'",
+                                         G[rule1].second.rule_ord + 1,
+                                         G[rule2].second.rule_ord + 1));
+  }
+
+  std::runtime_error shift_reduce_conflict(std::string non_terminal, unsigned rule_id)
+  {
+    throw std::runtime_error(
+        std::format("Shift-reduce conflict: shift non-terminal '{}' or reduce rule '{}'",
+                    non_terminal, G[rule_id].second.rule_ord + 1));
+  }
+
+  void build_automaton(auto &&printer)
   {
     // start state: beginning of the 0th rule, expect end of file after that
     emplace_state(state{{{{0, 0}, {grammar::eof}}}});
@@ -195,8 +209,8 @@ private:
                                   [&](shift_action act) {
                                     next_state = act.next_state;
                                   },  // shift -- update old (`expects` set or just building up)
-                                  [](reduce_action act) {
-                                    throw std::exception("Shift-reduce conflict");
+                                  [&](reduce_action act) {
+                                    throw shift_reduce_conflict(printer(c), act.rule_id);
                                   }},  // reduce -- conflict
                        trans_table[stt][c]);
 
@@ -224,12 +238,12 @@ private:
             for (auto c : expects)
             {
               std::visit(overloaded{[](std::monostate) {},  // error/not set -- ok
-                                    [](shift_action act) {
-                                      throw std::exception("Shift-reduce conflict");
+                                    [&](shift_action act) {
+                                      throw shift_reduce_conflict(printer(c), core.rule_id);
                                     },  // shift -- conflict
                                     [&](reduce_action act) {
                                       if (act.rule_id != core.rule_id)
-                                        throw std::exception("Reduce-reduce conflict");
+                                        throw reduce_reduce_conflict(act.rule_id, core.rule_id);
                                     }},  // reduce -- cannot be the same rule, conflict
                          trans_table[stt][c]);
               trans_table[stt][c] = reduce_action{core.rule_id};
@@ -339,9 +353,9 @@ public:
     }
   }
 
-  control_automaton(grammar G) : G(std::move(G))
+  control_automaton(grammar G, auto &&printer) : G(std::move(G))
   {
-    build_automaton();
+    build_automaton(std::forward<decltype(printer)>(printer));
   }
 
   unsigned save_table(const std::string &filename) const
@@ -368,9 +382,9 @@ public:
     };
 
     if (states_stg.size() >= (1 << 30))
-      throw std::exception("Too many states");
+      throw std::runtime_error("Too many states");
     if (G.size() >= (1 << 30))
-      throw std::exception("Too many rules");
+      throw std::runtime_error("Too many rules");
     for (auto &row : trans_table)
       for (auto &cell : row)
       {

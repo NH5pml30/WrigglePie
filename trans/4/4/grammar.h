@@ -34,6 +34,7 @@ public:
 
   struct rule
   {
+    int rule_ord;
     std::vector<element> rhs;
     cache_action cache_mod;
     std::string atribute = "";

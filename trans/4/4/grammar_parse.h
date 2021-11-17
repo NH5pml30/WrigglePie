@@ -73,8 +73,9 @@ namespace _grammar_parse
     std::vector<std::string> types(max_nonterminal - 1);
     types[0] = p_block[0].type;
     std::vector<std::pair<grammar::nonterminal, grammar::rule>> rules = {
-      {1, {{el_map[p_block[0].nt_name]}, grammar::cache_action::NONE, "{std::move($1)}"}}
+      {1, {-1, {el_map[p_block[0].nt_name]}, grammar::cache_action::NONE, "{std::move($1)}"}}
     };
+    int rule_ord = 0;
     for (auto &record : p_block)
     {
       types[(record.cached_id = el_map[record.nt_name]) - 1] = record.type;  /// try rewrite old?
@@ -106,7 +107,7 @@ namespace _grammar_parse
         auto gen = [&, res = std::vector<grammar::element>()](auto &gen) mutable {
           if (res.size() == preproc.size())
           {
-            rules.emplace_back(record.cached_id, grammar::rule{res, rule_rhs.cache_mod, attr});
+            rules.emplace_back(record.cached_id, grammar::rule{rule_ord, res, rule_rhs.cache_mod, attr});
             return;
           }
 
@@ -127,6 +128,7 @@ namespace _grammar_parse
             }
         };
         gen(gen);
+        rule_ord++;
       }
     }
 
