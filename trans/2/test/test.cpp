@@ -642,7 +642,7 @@ bool test() {
       out_passed(passed);
       return false;
     }
-    system(std::format("\"C:\\Program Files\\Graphviz\\bin\\dot.exe\" -Tpng expected.dot -o test{}.png", passed).c_str());
+    system(std::format("dot -Tpng expected.dot -o test{}.png", passed).c_str());
     passed++;
   }
 

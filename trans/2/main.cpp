@@ -54,7 +54,7 @@ class ParserApp : public CWinApp
   {
     if (FAILED(hr))
     {
-      report_error(std::format("{}: {X}", msg, hr), msg);
+      report_error(std::format("{}: {:#x}", msg, (DWORD)hr), msg);
       return true;
     }
     return false;
@@ -100,6 +100,8 @@ class ParserApp : public CWinApp
 
   static auto create_dot_instance() {
     IDOT *pIDOT;
+    CLSID clsid;
+    CLSIDFromProgID(OLESTR("Wingraphviz.dot"), &clsid);
     HRESULT hr = CoCreateInstance(CLSID_DOT, NULL, CLSCTX_ALL, IID_IDOT,
                           reinterpret_cast<LPVOID *>(&pIDOT));
     return check_hresult(hr, "CoCreateInstance failed")
@@ -155,7 +157,7 @@ class ParserApp : public CWinApp
   }
 
   bool pngify(auto &idot, const std::string &dot, const std::wstring &filename) {
-    IBinaryImage *img;
+    IBinaryImage *img{};
     HRESULT hr = idot->ToPNG(A2BSTR(dot.c_str()), &img);
     if (check_hresult(hr, "Conversion to PNG failed"))
       return false;
@@ -165,6 +167,13 @@ class ParserApp : public CWinApp
     if (check_hresult(hr, "Could not save the image"))
       return false;
     return true;
+  }
+
+  bool cmd_pngify(const std::string &dot_filename, const std::string &filename) {
+    if (system(std::format("dot -Tpng {} -o {}", dot_filename, filename).c_str()) == 0)
+      return true;
+    report_error("Could not call graphviz dot, make sure its on %PATH%", "Graphviz Error");
+    return false;
   }
 
   bool show_image(const std::wstring &filename) {
@@ -184,6 +193,7 @@ class ParserApp : public CWinApp
 public:
   BOOL InitInstance()
   {
+    /*
     HRESULT hr;
     hr = CoInitialize(NULL);
     if (check_hresult(hr, "CoInitialize failed"))
@@ -193,6 +203,7 @@ public:
     auto idot = create_dot_instance();
     if (!idot)
       return FALSE;
+    */
 
     auto inputg = get_input();
     if (!inputg.has_value())
@@ -203,7 +214,10 @@ public:
     if (!dot.has_value())
       return FALSE;
 
-    if (!pngify(idot, *dot, L"image.png"))
+    // if (!pngify(idot, *dot, L"image.png"))
+    //   return FALSE;
+
+    if (!cmd_pngify("dot.dot", "image.png"))
       return FALSE;
 
     if (!is_graphics)
