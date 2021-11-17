@@ -37,6 +37,9 @@ private:
   void _read_table() {
     std::ifstream in("./parser_table.dat", std::ios::binary);
 
+    if (!in.is_open())
+      throw parser_exception("Cannot open the parser table (expecting a valid file './parser_table.dat')", 0, 0);
+
     auto convert_data_to_variant = [](_written_data data) -> _action {
       _action res{};
       if (data.type == 1)
@@ -426,7 +429,7 @@ public:
                                 case 25:
                                 {
                                   if (_the_lexer.pop_caching())
-{
+                                  {
                                     $0 = _the_lexer.commit_cache();
                                     $0.resize($0.size() - _last_token_len);
                                   }

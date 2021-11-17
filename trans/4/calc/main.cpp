@@ -13,5 +13,4 @@ int main() {
     std::cout << print_exception(e);
   }
   return 0;
-  return 0;
 }

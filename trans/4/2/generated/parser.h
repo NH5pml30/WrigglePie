@@ -37,6 +37,9 @@ private:
   void _read_table() {
     std::ifstream in("generated/parser_table.dat", std::ios::binary);
 
+    if (!in.is_open())
+      throw parser_exception("Cannot open the parser table (expecting a valid file 'generated/parser_table.dat')", 0, 0);
+
     auto convert_data_to_variant = [](_written_data data) -> _action {
       _action res{};
       if (data.type == 1)

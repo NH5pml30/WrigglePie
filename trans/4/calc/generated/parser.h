@@ -37,6 +37,9 @@ private:
   void _read_table() {
     std::ifstream in("generated/parser_table.dat", std::ios::binary);
 
+    if (!in.is_open())
+      throw parser_exception("Cannot open the parser table (expecting a valid file 'generated/parser_table.dat')", 0, 0);
+
     auto convert_data_to_variant = [](_written_data data) -> _action {
       _action res{};
       if (data.type == 1)
@@ -46,7 +49,7 @@ private:
       return res;
     };
 
-    _trans_table.resize(238);
+    _trans_table.resize(266);
     for (auto &el : _trans_table)
     {
       _written_data data {};
@@ -186,6 +189,18 @@ public:
                                 case 7:
                                 {
                                   _work.pop_back();
+                                  auto $2 = std::get<5>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ -$2 }};
+                                  _lhs = 4;
+                                  break;
+                                }
+                                case 8:
+                                {
+                                  _work.pop_back();
                                   auto $3 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
@@ -198,7 +213,7 @@ public:
                                   _lhs = 4;
                                   break;
                                 }
-                                case 8:
+                                case 9:
                                 {
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
@@ -207,7 +222,7 @@ public:
                                   _lhs = 4;
                                   break;
                                 }
-                                case 9:
+                                case 10:
                                 {
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));

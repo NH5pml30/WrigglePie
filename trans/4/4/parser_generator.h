@@ -293,6 +293,10 @@ private:
   void _read_table() {
     std::ifstream in(")__delim" << table_filename << R"__delim(", std::ios::binary);
 
+    if (!in.is_open())
+      throw parser_exception("Cannot open the parser table (expecting a valid file ')__delim"
+        << table_filename << R"__delim(')", 0, 0);
+
     auto convert_data_to_variant = [](_written_data data) -> _action {
       _action res{};
       if (data.type == 1)
@@ -371,7 +375,8 @@ public:
         fmt << "_the_lexer.push_caching();\n";
         break;
       case grammar::cache_action::POP:
-        fmt << "if (_the_lexer.pop_caching())\n{\n";
+        fmt << "if (_the_lexer.pop_caching())\n";
+        fmt << "{\n";
         fmt.increase_indent(1);
         fmt << "$0 = _the_lexer.commit_cache();\n";
         // do not count the preread token

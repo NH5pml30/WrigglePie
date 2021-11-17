@@ -26,7 +26,8 @@
 		| F				{ $1 }
 
 	F :: double
-		: lp E rp		{ $2 }
+		: minus F		{ -$2 }
+		| lp E rp		{ $2 }
 		| n				{ std::atof($1.c_str()) }
 		| d				{ std::atof($1.c_str()) }
 }

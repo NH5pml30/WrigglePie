@@ -159,8 +159,9 @@ int main(int argc, char *argv[]) {
 
   try
   {
-    std::cout << grammar << std::endl;
     std::ifstream i(grammar);
+    if (!i.is_open())
+      throw std::runtime_error(std::format("Cannot open the grammar file '{}'\n", grammar));
     auto saved = std::filesystem::current_path();
     std::filesystem::current_path(std::filesystem::path(argv[0]).parent_path());
     auto gen = parser_generator(LALR_parser().parse(i));
@@ -169,7 +170,8 @@ int main(int argc, char *argv[]) {
   }
   catch (std::exception &e)
   {
-    std::cout << print_exception(e);
+    std::cerr << print_exception(e);
+    return 1;
   }
   return 0;
 }
