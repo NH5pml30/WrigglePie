@@ -54,16 +54,19 @@ public:
   };
 
 private:
+  int cache_level = 0;
+  std::stringstream cache, hidden_cache;
+  std::string commit_cache_;
   token cur_token_;
   std::vector<std::pair<std::regex, bool>> matchers = {
-    {std::regex(R"__del(^\s+)__del"), false},
-    {std::regex(R"__del(^[a-zA-Z])__del"), true},
-    {std::regex(R"__del(^\|)__del"), true},
-    {std::regex(R"__del(^\^)__del"), true},
-    {std::regex(R"__del(^&)__del"), true},
-    {std::regex(R"__del(^!)__del"), true},
-    {std::regex(R"__del(^\()__del"), true},
-    {std::regex(R"__del(^\))__del"), true},
+    {std::regex(R"__del(\s+)__del"), false},
+    {std::regex(R"__del([a-zA-Z])__del"), true},
+    {std::regex(R"__del(\|)__del"), true},
+    {std::regex(R"__del(\^)__del"), true},
+    {std::regex(R"__del(&)__del"), true},
+    {std::regex(R"__del(!)__del"), true},
+    {std::regex(R"__del(\()__del"), true},
+    {std::regex(R"__del(\))__del"), true},
   };
 
   bool next_line()
@@ -76,6 +79,7 @@ private:
         cur_line_pos = 0;
         cur_line_idx++;
       } while (res && cur_line.empty());
+      cur_line.push_back('\n');
       return res;
     }
     catch (std::ios_base::failure &)
@@ -87,13 +91,39 @@ private:
   void push_token(int id, bool passed, int length)
   {
     if (passed)
+    {
+      if (cache_level > 0)
+        cache << cur_token_.str << hidden_cache.str();
       cur_token_ = token{6 + id, cur_line.substr(cur_line_pos, length)};
+    }
+    else
+      hidden_cache << cur_line.substr(cur_line_pos, length);
     cur_line_pos += length;
   }
 
 public:
   _lexer()
   {
+  }
+
+  void push_caching() {
+    if (cache_level++ == 0)
+      cache << hidden_cache.str();
+  }
+
+  bool pop_caching() {
+    if (--cache_level == 0)
+    {
+      commit_cache_ = cache.str();
+      commit_cache_.resize(commit_cache_.size() - hidden_cache.str().size());
+      cache.str("");
+      return true;
+    }
+    return false;
+  }
+
+  std::string commit_cache() {
+    return commit_cache_;
   }
 
   void set_input(std::istream &is)
@@ -116,21 +146,22 @@ public:
 
   void next_token()
   {
-    if (cur_line_pos == cur_line.size())
-      if (!next_line())
-      {
-        cur_token_ = token{0, ""};
-        return;
-      }
-
     bool passed_through = false;
+    hidden_cache.str("");
     do
     {
+      if (cur_line_pos == cur_line.size())
+        if (!next_line())
+        {
+          cur_token_ = token{0, ""};
+          return;
+        }
+
       std::smatch m;
       int id = 0;
       for (auto &&[matcher, passed] : matchers)
       {
-        if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher))
+        if (std::regex_search(cur_line.cbegin() + cur_line_pos, cur_line.cend(), m, matcher, std::regex_constants::match_continuous))
         {
           push_token(id, passed, m.length());
           passed_through |= passed;

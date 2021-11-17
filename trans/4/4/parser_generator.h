@@ -103,6 +103,9 @@ public:
   };
 
 private:
+  int cache_level = 0;
+  std::stringstream cache, hidden_cache;
+  std::string commit_cache_;
   token cur_token_;
   std::vector<std::pair<std::regex, bool>> matchers = {
 )__delim";
@@ -124,6 +127,7 @@ private:
         cur_line_pos = 0;
         cur_line_idx++;
       } while (res && cur_line.empty());
+      cur_line.push_back('\n');
       return res;
     }
     catch (std::ios_base::failure &)
@@ -135,13 +139,39 @@ private:
   void push_token(int id, bool passed, int length)
   {
     if (passed)
+    {
+      if (cache_level > 0)
+        cache << cur_token_.str << hidden_cache.str();
       cur_token_ = token{)__delim" << automaton.G.max_nonterminal << R"__delim( + id, cur_line.substr(cur_line_pos, length)};
+    }
+    else
+      hidden_cache << cur_line.substr(cur_line_pos, length);
     cur_line_pos += length;
   }
 
 public:
   _lexer()
   {
+  }
+
+  void push_caching() {
+    if (cache_level++ == 0)
+      cache << hidden_cache.str();
+  }
+
+  bool pop_caching() {
+    if (--cache_level == 0)
+    {
+      commit_cache_ = cache.str();
+      commit_cache_.resize(commit_cache_.size() - hidden_cache.str().size());
+      cache.str("");
+      return true;
+    }
+    return false;
+  }
+
+  std::string commit_cache() {
+    return commit_cache_;
   }
 
   void set_input(std::istream &is)
@@ -165,6 +195,7 @@ public:
   void next_token()
   {
     bool passed_through = false;
+    hidden_cache.str("");
     do
     {
       if (cur_line_pos == cur_line.size())
@@ -304,6 +335,8 @@ public:
     _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
     bool _to_continue = true;
+    std::string $0;
+    size_t _last_token_len {};
 
     while (_to_continue)
     {
@@ -313,6 +346,7 @@ public:
                             [&](_shift_action _act) {
                               _work.push_back(_work_data_type{std::in_place_index<1>, std::move(_the_lexer.cur_token().str)});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
+                              _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();
                             },
                             [&](_reduce_action _act) {
@@ -330,6 +364,24 @@ public:
       fmt << "case " << rule_id << ":\n";
       fmt << "{\n";
       fmt.increase_indent(1);
+      // handle caching mode actions
+      switch (G[rule_id].second.cache_mod)
+      {
+      case grammar::cache_action::PUSH:
+        fmt << "_the_lexer.push_caching();\n";
+        break;
+      case grammar::cache_action::POP:
+        fmt << "if (_the_lexer.pop_caching())\n{\n";
+        fmt.increase_indent(1);
+        fmt << "$0 = _the_lexer.commit_cache();\n";
+        // do not count the preread token
+        fmt << "$0.resize($0.size() - _last_token_len);\n";
+        fmt.decrease_indent(1);
+        fmt << "}\n";
+        break;
+      }
+
+      // pop arguments from the stack and compute attribute
       for (unsigned i = G[rule_id].second.rhs.size(); i > 0; i--)
       {
         fmt << "_work.pop_back();\n";

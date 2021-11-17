@@ -1,5 +1,7 @@
 #pragma once
-#include<cstdlib>
+
+#include <cstdlib>
+
 #include <fstream>
 #include <variant>
 #include <vector>
@@ -63,12 +65,20 @@ public:
 
   double parse(std::istream &i)
   {
+    using _attr_type0 = double;
+    using _attr_type1 = double;
+    using _attr_type2 = double;
+    using _attr_type3 = double;
+
     _the_lexer.set_input(i);
 
     using _work_data_type = std::variant<unsigned, std::string, double, double, double, double>;
-    std::vector<_work_data_type> _work = {_work_data_type{std::in_place_index<0>, 0u}};
+    std::vector<_work_data_type> _work;
+    _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
     bool _to_continue = true;
+    std::string $0;
+    size_t _last_token_len {};
 
     while (_to_continue)
     {
@@ -78,6 +88,7 @@ public:
                             [&](_shift_action _act) {
                               _work.push_back(_work_data_type{std::in_place_index<1>, std::move(_the_lexer.cur_token().str)});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
+                              _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();
                             },
                             [&](_reduce_action _act) {
@@ -90,7 +101,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<3>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<2>, double{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<2>, _attr_type0{std::move($1)}};
                                   _to_continue = false;
                                   break;
                                 }
@@ -105,7 +116,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<3>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, double{$1+$3}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ $1 + $3 }};
                                   _lhs = 2;
                                   break;
                                 }
@@ -120,7 +131,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<3>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, double{$1-$3}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ $1 - $3 }};
                                   _lhs = 2;
                                   break;
                                 }
@@ -129,7 +140,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, double{$1}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ $1 }};
                                   _lhs = 2;
                                   break;
                                 }
@@ -144,7 +155,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, double{$1*$3}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ $1 * $3 }};
                                   _lhs = 3;
                                   break;
                                 }
@@ -159,7 +170,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, double{$1/$3}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ $1 / $3 }};
                                   _lhs = 3;
                                   break;
                                 }
@@ -168,7 +179,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<5>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, double{$1}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ $1 }};
                                   _lhs = 3;
                                   break;
                                 }
@@ -183,7 +194,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, double{$2}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ $2 }};
                                   _lhs = 4;
                                   break;
                                 }
@@ -192,7 +203,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, double{std::atof($1.c_str())}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ std::atof($1.c_str()) }};
                                   _lhs = 4;
                                   break;
                                 }
@@ -201,7 +212,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, double{std::atof($1.c_str())}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ std::atof($1.c_str()) }};
                                   _lhs = 4;
                                   break;
                                 }
@@ -217,6 +228,6 @@ public:
                             }
         }, _trans_table[_state * 14 + _the_lexer.cur_token().token_id]);
     }
-    return std::get<2>(_work.back());
+    return std::get<2>(std::move(_work.back()));
   }
 };

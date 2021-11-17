@@ -1,5 +1,7 @@
 #pragma once
-#include"../Tree.h"
+
+#include "../Tree.h"
+
 #include <fstream>
 #include <variant>
 #include <vector>
@@ -76,6 +78,8 @@ public:
     _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
     bool _to_continue = true;
+    std::string $0;
+    size_t _last_token_len {};
 
     while (_to_continue)
     {
@@ -85,6 +89,7 @@ public:
                             [&](_shift_action _act) {
                               _work.push_back(_work_data_type{std::in_place_index<1>, std::move(_the_lexer.cur_token().str)});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
+                              _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();
                             },
                             [&](_reduce_action _act) {
@@ -112,7 +117,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<3>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ternary_op("E",std::move($1),node("|"),std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ ternary_op("E", std::move($1), node("|"), std::move($3)) }};
                                   _lhs = 2;
                                   break;
                                 }
@@ -121,7 +126,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{unary_op("E",std::move($1))}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ unary_op("E", std::move($1)) }};
                                   _lhs = 2;
                                   break;
                                 }
@@ -136,7 +141,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ternary_op("T",std::move($1),node("^"),std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ ternary_op("T", std::move($1), node("^"), std::move($3)) }};
                                   _lhs = 3;
                                   break;
                                 }
@@ -145,7 +150,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<5>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{unary_op("T",std::move($1))}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ unary_op("T", std::move($1)) }};
                                   _lhs = 3;
                                   break;
                                 }
@@ -160,7 +165,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<5>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ternary_op("F",std::move($1),node("&"),std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ ternary_op("F", std::move($1), node("&"), std::move($3)) }};
                                   _lhs = 4;
                                   break;
                                 }
@@ -169,7 +174,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<6>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{unary_op("F",std::move($1))}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ unary_op("F", std::move($1)) }};
                                   _lhs = 4;
                                   break;
                                 }
@@ -184,7 +189,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{ternary_op("G",node("("),std::move($2),node(")"))}};
+                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{ ternary_op("G", node("("), std::move($2), node(")")) }};
                                   _lhs = 5;
                                   break;
                                 }
@@ -193,7 +198,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{node("n")}};
+                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{ node("n") }};
                                   _lhs = 5;
                                   break;
                                 }
@@ -205,7 +210,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{binary_op("G",node("!"),std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{ binary_op("G", node("!"), std::move($2)) }};
                                   _lhs = 5;
                                   break;
                                 }

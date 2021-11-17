@@ -39,6 +39,7 @@ namespace _grammar_parse
   struct parser_rule_rhs
   {
     std::vector<parse_rule_content_element> rhs;
+    grammar::cache_action cache_mod;
     std::string attribute;
   };
 
@@ -72,7 +73,7 @@ namespace _grammar_parse
     std::vector<std::string> types(max_nonterminal - 1);
     types[0] = p_block[0].type;
     std::vector<std::pair<grammar::nonterminal, grammar::rule>> rules = {
-      {1, {{el_map[p_block[0].nt_name]}, "{std::move($1)}"}}
+      {1, {{el_map[p_block[0].nt_name]}, grammar::cache_action::NONE, "{std::move($1)}"}}
     };
     for (auto &record : p_block)
     {
@@ -105,7 +106,7 @@ namespace _grammar_parse
         auto gen = [&, res = std::vector<grammar::element>()](auto &gen) mutable {
           if (res.size() == preproc.size())
           {
-            rules.emplace_back(record.cached_id, grammar::rule{res, attr});
+            rules.emplace_back(record.cached_id, grammar::rule{res, rule_rhs.cache_mod, attr});
             return;
           }
 

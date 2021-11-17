@@ -1,5 +1,7 @@
 #pragma once
-#include"grammar_parse.h"
+
+#include "grammar_parse.h"
+
 #include <fstream>
 #include <variant>
 #include <vector>
@@ -44,7 +46,7 @@ private:
       return res;
     };
 
-    _trans_table.resize(1760);
+    _trans_table.resize(2304);
     for (auto &el : _trans_table)
     {
       _written_data data {};
@@ -77,16 +79,20 @@ public:
     using _attr_type11 = std::vector<_grammar_parse::parse_rule_content_element>;
     using _attr_type12 = std::vector<std::string>;
     using _attr_type13 = std::vector<std::string>;
-    using _attr_type14 = std::string;
-    using _attr_type15 = std::string;
+    using _attr_type14 = int;
+    using _attr_type15 = int;
+    using _attr_type16 = std::string;
+    using _attr_type17 = int;
 
     _the_lexer.set_input(i);
 
-    using _work_data_type = std::variant<unsigned, std::string, parser_configuration, parser_configuration, std::string, _grammar_parse::lexer_block, _grammar_parse::lexer_block, _grammar_parse::lexer_record, _grammar_parse::parser_block, _grammar_parse::parser_block, _grammar_parse::parser_record, std::vector<_grammar_parse::parser_rule_rhs>, _grammar_parse::parser_rule_rhs, std::vector<_grammar_parse::parse_rule_content_element>, std::vector<std::string>, std::vector<std::string>, std::string, std::string>;
+    using _work_data_type = std::variant<unsigned, std::string, parser_configuration, parser_configuration, std::string, _grammar_parse::lexer_block, _grammar_parse::lexer_block, _grammar_parse::lexer_record, _grammar_parse::parser_block, _grammar_parse::parser_block, _grammar_parse::parser_record, std::vector<_grammar_parse::parser_rule_rhs>, _grammar_parse::parser_rule_rhs, std::vector<_grammar_parse::parse_rule_content_element>, std::vector<std::string>, std::vector<std::string>, int, int, std::string, int>;
     std::vector<_work_data_type> _work;
     _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
     bool _to_continue = true;
+    std::string $0;
+    size_t _last_token_len {};
 
     while (_to_continue)
     {
@@ -96,6 +102,7 @@ public:
                             [&](_shift_action _act) {
                               _work.push_back(_work_data_type{std::in_place_index<1>, std::move(_the_lexer.cur_token().str)});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
+                              _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();
                             },
                             [&](_reduce_action _act) {
@@ -123,16 +130,16 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<4>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{_grammar_parse::to_config(std::move($1),std::move($2),std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<3>, _attr_type1{ _grammar_parse::to_config(std::move($1), std::move($2), std::move($3)) }};
                                   _lhs = 2;
                                   break;
                                 }
                                 case 2:
                                 {
                                   _work.pop_back();
-                                  auto $1 = std::get<16>(std::move(_work.back()));
+                                  auto $1 = std::get<18>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{$1}};
+                                  $n = _work_data_type{std::in_place_index<4>, _attr_type2{ $1 }};
                                   _lhs = 3;
                                   break;
                                 }
@@ -150,7 +157,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{std::move($3)}};
+                                  $n = _work_data_type{std::in_place_index<5>, _attr_type3{ std::move($3) }};
                                   _lhs = 4;
                                   break;
                                 }
@@ -168,7 +175,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<6>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{_grammar_parse::append($1,std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<6>, _attr_type4{ _grammar_parse::append($1, std::move($2)) }};
                                   _lhs = 5;
                                   break;
                                 }
@@ -180,7 +187,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<7>, _attr_type5{std::move($1),std::move($2),true}};
+                                  $n = _work_data_type{std::in_place_index<7>, _attr_type5{ std::move($1), std::move($2), true }};
                                   _lhs = 6;
                                   break;
                                 }
@@ -195,7 +202,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<7>, _attr_type5{std::move($1),std::move($2),false}};
+                                  $n = _work_data_type{std::in_place_index<7>, _attr_type5{ std::move($1), std::move($2), false }};
                                   _lhs = 6;
                                   break;
                                 }
@@ -213,7 +220,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<8>, _attr_type6{std::move($3)}};
+                                  $n = _work_data_type{std::in_place_index<8>, _attr_type6{ std::move($3) }};
                                   _lhs = 7;
                                   break;
                                 }
@@ -222,7 +229,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<10>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<9>, _attr_type7{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<9>, _attr_type7{ std::move($1) }};
                                   _lhs = 8;
                                   break;
                                 }
@@ -234,7 +241,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<9>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<9>, _attr_type7{_grammar_parse::append($1,std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<9>, _attr_type7{ _grammar_parse::append($1, std::move($2)) }};
                                   _lhs = 8;
                                   break;
                                 }
@@ -255,7 +262,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<10>, _attr_type8{std::move($1),std::move($3),std::move($5)}};
+                                  $n = _work_data_type{std::in_place_index<10>, _attr_type8{ std::move($1), std::move($3), std::move($5) }};
                                   _lhs = 9;
                                   break;
                                 }
@@ -264,7 +271,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<12>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<11>, _attr_type9{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<11>, _attr_type9{ std::move($1) }};
                                   _lhs = 10;
                                   break;
                                 }
@@ -279,49 +286,55 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<11>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<11>, _attr_type9{_grammar_parse::append($1,std::move($3))}};
+                                  $n = _work_data_type{std::in_place_index<11>, _attr_type9{ _grammar_parse::append($1, std::move($3)) }};
                                   _lhs = 10;
                                   break;
                                 }
                                 case 14:
                                 {
                                   _work.pop_back();
-                                  auto $2 = std::get<16>(std::move(_work.back()));
+                                  auto $2 = std::get<18>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
                                   auto $1 = std::get<13>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<12>, _attr_type10{std::move($1),std::move($2)}};
+                                  $n = _work_data_type{std::in_place_index<12>, _attr_type10{ std::move($1), grammar::cache_action::NONE, std::move($2) }};
                                   _lhs = 11;
                                   break;
                                 }
                                 case 15:
                                 {
-                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{}};
-                                  _lhs = 12;
-                                  break;
-                                }
-                                case 16:
-                                {
+                                  _work.pop_back();
+                                  auto $3 = std::get<18>(std::move(_work.back()));
+                                  _work.pop_back();
                                   _work.pop_back();
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
                                   auto $1 = std::get<13>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{_grammar_parse::append($1,_grammar_parse::content_el_from_terminal(std::move($2)))}};
-                                  _lhs = 12;
+                                  $n = _work_data_type{std::in_place_index<12>, _attr_type10{ std::move($1), grammar::cache_action::PUSH, std::move($3) }};
+                                  _lhs = 11;
                                   break;
                                 }
-                                case 17:
+                                case 16:
                                 {
                                   _work.pop_back();
-                                  auto $2 = std::get<14>(std::move(_work.back()));
+                                  auto $3 = std::get<18>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
                                   auto $1 = std::get<13>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{_grammar_parse::append($1,_grammar_parse::content_el_from_tilde(std::move($2)))}};
+                                  $n = _work_data_type{std::in_place_index<12>, _attr_type10{ std::move($1), grammar::cache_action::POP, std::move($3) }};
+                                  _lhs = 11;
+                                  break;
+                                }
+                                case 17:
+                                {
+                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{}};
                                   _lhs = 12;
                                   break;
                                 }
@@ -331,13 +344,37 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<1>(std::move(_work.back()));
+                                  auto $1 = std::get<13>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<14>, _attr_type12{std::move($2)}};
-                                  _lhs = 13;
+                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{ _grammar_parse::append($1, _grammar_parse::content_el_from_terminal(std::move($2))) }};
+                                  _lhs = 12;
                                   break;
                                 }
                                 case 19:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<14>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<13>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<13>, _attr_type11{ _grammar_parse::append($1, _grammar_parse::content_el_from_tilde(std::move($2))) }};
+                                  _lhs = 12;
+                                  break;
+                                }
+                                case 20:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<14>, _attr_type12{ std::move($2) }};
+                                  _lhs = 13;
+                                  break;
+                                }
+                                case 21:
                                 {
                                   _work.pop_back();
                                   auto $4 = std::get<1>(std::move(_work.back()));
@@ -351,20 +388,20 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<14>, _attr_type12{std::move($3)}};
+                                  $n = _work_data_type{std::in_place_index<14>, _attr_type12{ std::move($3) }};
                                   _lhs = 13;
                                   break;
                                 }
-                                case 20:
+                                case 22:
                                 {
                                   _work.pop_back();
                                   auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{std::move($1)}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{ std::move($1) }};
                                   _lhs = 14;
                                   break;
                                 }
-                                case 21:
+                                case 23:
                                 {
                                   _work.pop_back();
                                   auto $2 = std::get<1>(std::move(_work.back()));
@@ -372,77 +409,53 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{_grammar_parse::append($1,std::move($2))}};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{ _grammar_parse::append($1, std::move($2)) }};
                                   _lhs = 14;
-                                  break;
-                                }
-                                case 22:
-                                {
-                                  _work.pop_back();
-                                  auto $3 = std::get<1>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  _work.pop_back();
-                                  auto $2 = std::get<17>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  _work.pop_back();
-                                  auto $1 = std::get<1>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<16>, _attr_type14{$2}};
-                                  _lhs = 15;
-                                  break;
-                                }
-                                case 23:
-                                {
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{""}};
-                                  _lhs = 16;
                                   break;
                                 }
                                 case 24:
                                 {
+                                  _the_lexer.push_caching();
                                   _work.pop_back();
-                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<16>, _attr_type14{ 0 }};
+                                  _lhs = 15;
                                   break;
                                 }
                                 case 25:
                                 {
+                                  if (_the_lexer.pop_caching())
+{
+                                    $0 = _the_lexer.commit_cache();
+                                    $0.resize($0.size() - _last_token_len);
+                                  }
                                   _work.pop_back();
-                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  auto $1 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
-                                  _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
+                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{ 0 }};
                                   _lhs = 16;
                                   break;
                                 }
                                 case 26:
                                 {
                                   _work.pop_back();
-                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  auto $3 = std::get<17>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $2 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  _work.pop_back();
+                                  auto $1 = std::get<16>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<18>, _attr_type16{ std::move($0) }};
+                                  _lhs = 17;
                                   break;
                                 }
                                 case 27:
                                 {
-                                  _work.pop_back();
-                                  auto $2 = std::get<1>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
-                                  _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 28:
@@ -451,10 +464,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 29:
@@ -463,10 +476,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 30:
@@ -475,10 +488,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 31:
@@ -487,10 +500,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 32:
@@ -499,10 +512,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 33:
@@ -511,10 +524,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 34:
@@ -523,10 +536,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 35:
@@ -535,10 +548,10 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                                 case 36:
@@ -547,10 +560,94 @@ public:
                                   auto $2 = std::get<1>(std::move(_work.back()));
                                   _work.pop_back();
                                   _work.pop_back();
-                                  auto $1 = std::get<17>(std::move(_work.back()));
+                                  auto $1 = std::get<19>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<17>, _attr_type15{$1+$2}};
-                                  _lhs = 16;
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 37:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 38:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 39:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 40:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 41:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 42:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<1>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
+                                  break;
+                                }
+                                case 43:
+                                {
+                                  _work.pop_back();
+                                  auto $2 = std::get<18>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  _work.pop_back();
+                                  auto $1 = std::get<19>(std::move(_work.back()));
+                                  _work.pop_back();
+                                  $n = _work_data_type{std::in_place_index<19>, _attr_type17{ 0 }};
+                                  _lhs = 18;
                                   break;
                                 }
                               }
@@ -560,10 +657,10 @@ public:
 
                               if (_to_continue)
                                 _work.push_back(std::get<_shift_action>(
-                                                   _trans_table[_rollback_state * 32 + _lhs])
+                                                   _trans_table[_rollback_state * 36 + _lhs])
                                                    .next_state);
                             }
-        }, _trans_table[_state * 32 + _the_lexer.cur_token().token_id]);
+        }, _trans_table[_state * 36 + _the_lexer.cur_token().token_id]);
     }
     return std::get<2>(std::move(_work.back()));
   }

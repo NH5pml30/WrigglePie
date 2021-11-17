@@ -8,6 +8,8 @@
 	tilde			/~/
 	open_par		/\(/
 	close_par		/\)/
+	push			/!push_cache/
+	pop				/!pop_cache/
 	open_curly		/\{/
 	close_curly		/\}/
 	lexer_begin		/%lexer/
@@ -53,7 +55,9 @@
 		| parser_rule_rhss or parser_rule_rhs { _grammar_parse::append($1, std::move($3)) }
 
 	parser_rule_rhs :: _grammar_parse::parser_rule_rhs
-		: parser_rule_content curly_block { std::move($1), std::move($2) }
+		: parser_rule_content curly_block { std::move($1), grammar::cache_action::NONE, std::move($2) }
+		| parser_rule_content push curly_block { std::move($1), grammar::cache_action::PUSH, std::move($3) }
+		| parser_rule_content pop curly_block { std::move($1), grammar::cache_action::POP, std::move($3) }
 
 	parser_rule_content :: std::vector<_grammar_parse::parse_rule_content_element>
 		: {}
@@ -68,10 +72,16 @@
 		: id { std::move($1) }
 		| tokens id { _grammar_parse::append($1, std::move($2)) }
 
-	curly_block :: std::string
-		: open_curly curly_block_content close_curly { $2 }
+	curly_begin :: int
+		: open_curly !push_cache { 0 }
+	curly_end :: int
+		: close_curly !pop_cache { 0 }
 
-	curly_block_content :: std::string
-		: { "" }
-		| curly_block_content ~( open_curly close_curly ) { $1 + $2 }
+	curly_block :: std::string
+		: curly_begin curly_block_content curly_end { std::move($0) }
+
+	curly_block_content :: int
+		: { 0 }
+		| curly_block_content ~( open_curly close_curly ) { 0 }
+		| curly_block_content curly_block { 0 }
 }

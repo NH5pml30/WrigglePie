@@ -168,7 +168,6 @@
     <ClInclude Include="CInputDlg.h" />
     <ClInclude Include="generated\lexer.h" />
     <ClInclude Include="generated\parser.h" />
-    <ClInclude Include="ParserException.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Token.h" />

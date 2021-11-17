@@ -27,9 +27,15 @@ public:
     return d >= max_nonterminal && d < max_element;
   }
 
+  enum class cache_action
+  {
+    NONE, PUSH, POP
+  };
+
   struct rule
   {
     std::vector<element> rhs;
+    cache_action cache_mod;
     std::string atribute = "";
   };
 

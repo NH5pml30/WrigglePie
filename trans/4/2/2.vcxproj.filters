@@ -36,9 +36,6 @@
     <ClInclude Include="Token.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParserException.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="generated\lexer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
