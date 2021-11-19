@@ -143,12 +143,12 @@ public:
     next_token();
   }
 
-  parser_exception create_exception(const std::string &msg)
+  parser_exception create_exception(const std::string &msg) const
   {
     return parser_exception(msg, cur_line_idx, cur_line_pos);
   }
 
-  [[noreturn]] void fail(const std::string &msg)
+  [[noreturn]] void fail(const std::string &msg) const
   {
     throw create_exception(msg);
   }
@@ -179,7 +179,7 @@ public:
         id++;
       }
       if (m.empty())
-        throw create_exception("No tokens matched");
+        throw create_exception("Lexer error: no tokens matched");
     } while(!passed_through);
   }
 

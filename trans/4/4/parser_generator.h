@@ -182,12 +182,12 @@ public:
     next_token();
   }
 
-  parser_exception create_exception(const std::string &msg)
+  parser_exception create_exception(const std::string &msg) const
   {
     return parser_exception(msg, cur_line_idx, cur_line_pos);
   }
 
-  [[noreturn]] void fail(const std::string &msg)
+  [[noreturn]] void fail(const std::string &msg) const
   {
     throw create_exception(msg);
   }
@@ -218,7 +218,7 @@ public:
         id++;
       }
       if (m.empty())
-        throw create_exception("No tokens matched");
+        throw create_exception("Lexer error: no tokens matched");
     } while(!passed_through);
   }
 
@@ -316,6 +316,36 @@ private:
   }
 
   _lexer _the_lexer;
+)__delim";
+
+    // table for error reporting
+    fmt.increase_indent(1);
+    fmt << "std::vector<std::string> _symbols = {\n";
+    fmt.increase_indent(1);
+    for (int i = G.max_nonterminal; i < G.max_element; i++)
+      fmt << "\"" << printer(i) << "\",\n";
+    fmt.decrease_indent(1);
+    fmt << "};\n";
+    fmt.decrease_indent(1);
+
+    fmt << R"__delim(
+  std::string _get_symbol(int c) const
+  {
+    return c == 0 ? "<EOF>" : _symbols[c - )__delim" << G.max_nonterminal << R"__delim(];
+  }
+
+  std::string _get_error_msg(int c, unsigned state) const
+  {
+    std::stringstream str;
+    str << "Parse error: unexpected token: " << _get_symbol(c) << ", expected one of the following: ";
+    bool is_first = true;
+    for (int el = )__delim" << G.max_nonterminal << R"__delim(; el < )__delim" << G.max_element << R"__delim(; el++)
+      if (el != c && _trans_table[state * )__delim" << G.max_element << R"__delim( + el].index() > 0)
+        str << (is_first ? (is_first = false, "") : ", ") << _get_symbol(el);
+    if (0 != c && _trans_table[state * )__delim" << G.max_element << R"__delim(].index() > 0)
+      str << (is_first ? (is_first = false, "") : ", ") << _get_symbol(0);
+    return str.str();
+  }
 
 public:
   LALR_parser()
@@ -346,9 +376,9 @@ public:
     {
       unsigned _state = std::get<0>(_work.back());
 
-      std::visit(overloaded{[&](std::monostate) { _the_lexer.fail("Parse error"); },
+      std::visit(overloaded{[&](std::monostate) { _the_lexer.fail(_get_error_msg(_the_lexer.cur_token().token_id, _state)); },
                             [&](_shift_action _act) {
-                              _work.push_back(_work_data_type{std::in_place_index<1>, std::move(_the_lexer.cur_token().str)});
+                              _work.push_back(_work_data_type{std::in_place_index<1>, _the_lexer.cur_token().str});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
                               _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();

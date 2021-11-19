@@ -59,6 +59,35 @@ private:
   }
 
   _lexer _the_lexer;
+  std::vector<std::string> _symbols = {
+    "ws",
+    "d",
+    "n",
+    "plus",
+    "minus",
+    "asterisk",
+    "slash",
+    "lp",
+    "rp",
+  };
+
+  std::string _get_symbol(int c) const
+  {
+    return c == 0 ? "<EOF>" : _symbols[c - 5];
+  }
+
+  std::string _get_error_msg(int c, unsigned state) const
+  {
+    std::stringstream str;
+    str << "Parse error: unexpected token: " << _get_symbol(c) << ", expected one of the following: ";
+    bool is_first = true;
+    for (int el = 5; el < 14; el++)
+      if (el != c && _trans_table[state * 14 + el].index() > 0)
+        str << (is_first ? (is_first = false, "") : ", ") << _get_symbol(el);
+    if (0 != c && _trans_table[state * 14].index() > 0)
+      str << (is_first ? (is_first = false, "") : ", ") << _get_symbol(0);
+    return str.str();
+  }
 
 public:
   LALR_parser()
@@ -87,9 +116,9 @@ public:
     {
       unsigned _state = std::get<0>(_work.back());
 
-      std::visit(overloaded{[&](std::monostate) { _the_lexer.fail("Parse error"); },
+      std::visit(overloaded{[&](std::monostate) { _the_lexer.fail(_get_error_msg(_the_lexer.cur_token().token_id, _state)); },
                             [&](_shift_action _act) {
-                              _work.push_back(_work_data_type{std::in_place_index<1>, std::move(_the_lexer.cur_token().str)});
+                              _work.push_back(_work_data_type{std::in_place_index<1>, _the_lexer.cur_token().str});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
                               _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();
