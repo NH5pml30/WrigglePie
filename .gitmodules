@@ -1,3 +1,6 @@
 [submodule "optimization-methods-labs"]
 	path = optimization-methods-labs
 	url = https://github.com/kp2pml30/optimization-methods-labs
+[submodule "cpp-course"]
+	path = cpp-course
+	url = https://github.com/NH5pml30/cpp-course
