@@ -10,7 +10,7 @@ Almost all C++ projects probably need MSVC with C++17 or C++20
 - use of automatic parser generators (alex + happy)
 - LALR(1) bottom-up parser (and very simple regex lexer) generator
 
-## Algorithms, Data Structures, Probability Theory & Programming
+## Algorithms and Data Structures, Probability Theory & Programming
 Tasks are in .pdf or .md files
 
 ## Discrete Maths
