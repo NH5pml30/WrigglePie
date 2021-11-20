@@ -15,7 +15,7 @@ Tasks are in .pdf or .md files
 
 ## Discrete Maths
 No task descriptions for now...
-Some may be found archived [here](http://web.archive.org/web/*/https://neerc.ifmo.ru/teaching/*)
+Some may be found archived [here](http://web.archive.org/web/*/https://neerc.ifmo.ru/teaching/dm*)
 
 ## Linear Algebra
 Tasks are probably lost forever
