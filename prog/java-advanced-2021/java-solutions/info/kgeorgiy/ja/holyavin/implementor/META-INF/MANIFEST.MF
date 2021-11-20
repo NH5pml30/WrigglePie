@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: info.kgeorgiy.ja.holyavin.implementor.Implementor
+Class-Path: info.kgeorgiy.java.advanced.base.jar info.kgeorgiy.java.advanced.im
+ plementor.jar
