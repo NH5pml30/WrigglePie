@@ -1,0 +1,3 @@
+[submodule "optimization-methods-labs"]
+	path = optimization-methods-labs
+	url = https://github.com/kp2pml30/optimization-methods-labs
