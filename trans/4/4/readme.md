@@ -5,6 +5,8 @@ Supports LALR(1) grammars with synthesized attributes. The input file grammar is
 All whitespaces are left as-is inside the attributes and the preamble through raw input caching, controlled with `!pop_cache`/`!push_cache` directives, executed when the associated rule is reduced. You can access the cache through `std::string $0` variable inside the attribute.
 Note that caching includes only the next token after `!push_cache` (because of the lookahead) and the previous token before `!pop_cache`.
 
+You may access a token's position through `.line` and `.chr` (for example, `$1.line`) inside the attribute. The token itself is a struct with an additional `std::string` `.as_string` field, but for user-friendliness `operator std::string() &&` and `const char *c_str() const` methods are also available.
+
 To match any terminal except some inside a non-terminal rule, use `~( some_terminal some_terminal1 ... )` or `~some_terminal`.
 
 To escape any unmatched curly braces inside attribute expressions, use `\`. To escape `/` inside lexer regexes use `\`.
