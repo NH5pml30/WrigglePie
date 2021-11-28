@@ -57,7 +57,7 @@ class ParserApp : public CWinApp
   {
     if (FAILED(hr))
     {
-      report_error(std::format("{}: {X}", msg, hr), msg);
+      report_error(std::format("{}: {:#x}", msg, (DWORD)hr), msg);
       return true;
     }
     return false;
