@@ -88,6 +88,22 @@ private:
     return str.str();
   }
 
+  struct _pos_token
+  {
+    std::string as_string;
+    int line, chr;
+
+    operator std::string() &&
+    {
+      return std::move(as_string);
+    }
+
+    const char *c_str() const
+    {
+      return as_string.c_str();
+    }
+  };
+
 public:
   LALR_parser()
   {
@@ -104,7 +120,7 @@ public:
 
     _the_lexer.set_input(i);
 
-    using _work_data_type = std::variant<unsigned, std::string, std::unique_ptr<Tree>, std::unique_ptr<Tree>, std::unique_ptr<Tree>, std::unique_ptr<Tree>, std::unique_ptr<Tree>>;
+    using _work_data_type = std::variant<unsigned, _pos_token, std::unique_ptr<Tree>, std::unique_ptr<Tree>, std::unique_ptr<Tree>, std::unique_ptr<Tree>, std::unique_ptr<Tree>>;
     std::vector<_work_data_type> _work;
     _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
@@ -118,7 +134,8 @@ public:
 
       std::visit(overloaded{[&](std::monostate) { _the_lexer.fail(_get_error_msg(_the_lexer.cur_token().token_id, _state)); },
                             [&](_shift_action _act) {
-                              _work.push_back(_work_data_type{std::in_place_index<1>, _the_lexer.cur_token().str});
+                              auto tok = _the_lexer.cur_token();
+                              _work.push_back(_work_data_type{std::in_place_index<1>, _pos_token{tok.str, tok.line, tok.chr}});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
                               _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();

@@ -50,6 +50,7 @@ public:
   struct token
   {
     int token_id;
+    int line, chr;
     std::string str;
   };
 
@@ -95,7 +96,7 @@ private:
     {
       if (cache_level > 0)
         cache << cur_token_.str << hidden_cache.str();
-      cur_token_ = token{5 + id, cur_line.substr(cur_line_pos, length)};
+      cur_token_ = token{5 + id, cur_line_idx, cur_line_pos, cur_line.substr(cur_line_pos, length)};
     }
     else
       hidden_cache << cur_line.substr(cur_line_pos, length);
@@ -154,7 +155,7 @@ public:
       if (cur_line_pos == cur_line.size())
         if (!next_line())
         {
-          cur_token_ = token{0, ""};
+          cur_token_ = token{0, -1, -1, ""};
           return;
         }
 

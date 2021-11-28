@@ -97,6 +97,22 @@ private:
     return str.str();
   }
 
+  struct _pos_token
+  {
+    std::string as_string;
+    int line, chr;
+
+    operator std::string() &&
+    {
+      return std::move(as_string);
+    }
+
+    const char *c_str() const
+    {
+      return as_string.c_str();
+    }
+  };
+
 public:
   LALR_parser()
   {
@@ -126,7 +142,7 @@ public:
 
     _the_lexer.set_input(i);
 
-    using _work_data_type = std::variant<unsigned, std::string, parser_configuration, parser_configuration, std::string, _grammar_parse::lexer_block, _grammar_parse::lexer_block, _grammar_parse::lexer_record, _grammar_parse::parser_block, _grammar_parse::parser_block, _grammar_parse::parser_record, std::vector<_grammar_parse::parser_rule_rhs>, _grammar_parse::parser_rule_rhs, std::vector<_grammar_parse::parse_rule_content_element>, std::vector<std::string>, std::vector<std::string>, int, int, std::string, int>;
+    using _work_data_type = std::variant<unsigned, _pos_token, parser_configuration, parser_configuration, std::string, _grammar_parse::lexer_block, _grammar_parse::lexer_block, _grammar_parse::lexer_record, _grammar_parse::parser_block, _grammar_parse::parser_block, _grammar_parse::parser_record, std::vector<_grammar_parse::parser_rule_rhs>, _grammar_parse::parser_rule_rhs, std::vector<_grammar_parse::parse_rule_content_element>, std::vector<std::string>, std::vector<std::string>, int, int, std::string, int>;
     std::vector<_work_data_type> _work;
     _work.emplace_back(_work_data_type{std::in_place_index<0>, 0u});
 
@@ -140,7 +156,8 @@ public:
 
       std::visit(overloaded{[&](std::monostate) { _the_lexer.fail(_get_error_msg(_the_lexer.cur_token().token_id, _state)); },
                             [&](_shift_action _act) {
-                              _work.push_back(_work_data_type{std::in_place_index<1>, _the_lexer.cur_token().str});
+                              auto tok = _the_lexer.cur_token();
+                              _work.push_back(_work_data_type{std::in_place_index<1>, _pos_token{tok.str, tok.line, tok.chr}});
                               _work.push_back(_work_data_type{std::in_place_index<0>, _act.next_state});
                               _last_token_len = _the_lexer.cur_token().str.size();
                               _the_lexer.next_token();
@@ -449,7 +466,7 @@ public:
                                   _work.pop_back();
                                   auto $1 = std::get<15>(std::move(_work.back()));
                                   _work.pop_back();
-                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{ _grammar_parse::append($1, std::move($2)) }};
+                                  $n = _work_data_type{std::in_place_index<15>, _attr_type13{ _grammar_parse::append<std::string>($1, std::move($2)) }};
                                   _lhs = 14;
                                   break;
                                 }
