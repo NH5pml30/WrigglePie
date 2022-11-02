@@ -5,7 +5,7 @@
 Almost all C++ projects probably need MSVC with C++17 or C++20
 
 ## Translation Methods Labs
-- perl regex lab (hidden)
+- perl regex lab
 - top-down hand-written parser
 - use of automatic parser generators (alex + happy)
 - LALR(1) bottom-up parser (and very simple regex lexer) generator
